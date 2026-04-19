@@ -1,18 +1,18 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth';
+import { HouseholdService } from '../../../services/household.service';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-create-household',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
-  templateUrl: './login.html',
-  styleUrl: './login.css',
+  templateUrl: './create-household.html',
+  styleUrl: './create-household.css',
 })
-export class LoginComponent implements OnInit {
+export class CreateHouseholdComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly authService = inject(AuthService);
+  private readonly householdService = inject(HouseholdService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -22,23 +22,12 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      email: [
-        '',
-        [
-          Validators.required,
-          // Updated to the strict pattern to match the register page
-          Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
-        ],
-      ],
-      password: ['', [Validators.required]],
+      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
     });
   }
 
-  get emailCtrl() {
-    return this.form.get('email')!;
-  }
-  get passCtrl() {
-    return this.form.get('password')!;
+  get nameCtrl() {
+    return this.form.get('name')!;
   }
 
   onSubmit(): void {
@@ -46,20 +35,18 @@ export class LoginComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-
     this.loading = true;
     this.errorMsg = '';
 
-    this.authService.login(this.emailCtrl.value, this.passCtrl.value).subscribe({
+    this.householdService.createHousehold({ name: this.nameCtrl.value.trim() }).subscribe({
       next: () => {
         this.loading = false;
         this.cdr.detectChanges();
         this.router.navigate(['/dashboard']);
       },
-      error: (err) => {
+      error: (err: Error) => {
         this.loading = false;
-        this.errorMsg = 'Invalid email or password. Please try again.';
-        console.error('Login error:', err);
+        this.errorMsg = err.message;
         this.cdr.detectChanges();
       },
     });

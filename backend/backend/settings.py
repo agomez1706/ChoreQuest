@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 import firebase_admin
-from firebase_admin import credentials
+from firebase_admin import credentials, firestore
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -19,8 +19,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 FIREBASE_KEY_PATH = os.path.join(BASE_DIR, 'firebase-admin-key.json')
 
+# Initialize Firebase
 cred = credentials.Certificate(FIREBASE_KEY_PATH)
 firebase_admin.initialize_app(cred)
+
+# Create a global Firestore database client that our views will use
+FIREBASE_DB = firestore.client()
 
 
 # Quick-start development settings - unsuitable for production
@@ -135,3 +139,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'api.authentication.FirebaseAuthentication',
+    ],
+}

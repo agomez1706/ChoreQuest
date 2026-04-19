@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Household, HouseholdMembership
+from rest_framework.response import Response
+from django.db import IntegrityError
 from .serializers import (
     HouseholdSerializer,
     CreateHouseholdSerializer,
@@ -17,17 +19,22 @@ def _get_user_household(user):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_household(request):
+def join_household(request):
     if _get_user_household(request.user):
         return Response({'detail': 'You are already in a household. Leave it first.'}, status=400)
-    serializer = CreateHouseholdSerializer(data=request.data)
+    serializer = JoinHouseholdSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    household = Household.objects.create(
-        name=serializer.validated_data['name'],
-        admin=request.user,
-    )
-    HouseholdMembership.objects.create(household=household, user=request.user)
-    return Response(HouseholdSerializer(household).data, status=201)
+    code      = serializer.validated_data['invite_code'].upper()
+    household = Household.objects.filter(invite_code=code).first()
+    if not household:
+        return Response({'detail': 'Invalid invite code.'}, status=404)
+    if household.is_full:
+        return Response({'detail': f'This household is full ({household.member_count}/6).'}, status=400)
+    try:
+        HouseholdMembership.objects.create(household=household, user=request.user)
+    except IntegrityError:
+        return Response({'detail': 'Could not join household. It may now be full.'}, status=400)
+    return Response(HouseholdSerializer(household).data)
 
 
 @api_view(['POST'])

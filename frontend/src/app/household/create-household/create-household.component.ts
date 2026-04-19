@@ -32,7 +32,7 @@ export class CreateHouseholdComponent implements OnInit {
     this.loading = true;
     this.errorMsg = '';
     this.householdService.createHousehold({ name: this.nameCtrl.value.trim() }).subscribe({
-      next: () => { this.loading = false; this.router.navigate(['/dashboard']); },
+      next: () => { this.loading = false; this.router.navigate(['/household']); },
       error: (err: Error) => { this.loading = false; this.errorMsg = err.message; },
     });
   }

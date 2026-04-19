@@ -53,7 +53,7 @@ export class JoinHouseholdComponent implements OnInit {
     this.loading = true;
     this.errorMsg = '';
     this.householdService.joinHousehold({ invite_code: this.codeCtrl.value }).subscribe({
-      next: () => { this.loading = false; this.router.navigate(['/dashboard']); },
+      next: () => { this.loading = false; this.router.navigate(['/household']); },
       error: (err: Error) => { this.loading = false; this.errorMsg = err.message; },
     });
   }

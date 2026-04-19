@@ -52,17 +52,15 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(this.emailCtrl.value, this.passCtrl.value).subscribe({
       next: () => {
-        this.loading = false; // Turn off spinner
-        alert('Test successful! User was logged in to Firebase.'); //Placeholder notification to be removed by Logan in the next branch.
-
-        // Updated route: navigates to the dashboard upon a successful login.
-        this.router.navigate(['/household/create']);
+        this.loading = false;
+        this.cdr.detectChanges();
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
-        this.loading = false; // Turn off spinner on error
+        this.loading = false;
         this.errorMsg = 'Invalid email or password. Please try again.';
         console.error('Login error:', err);
-        this.cdr.detectChanges(); // Force UI update
+        this.cdr.detectChanges();
       },
     });
   }

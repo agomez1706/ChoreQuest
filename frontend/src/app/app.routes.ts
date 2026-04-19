@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './services/auth.guard';
 
 export const routes: Routes = [
   {
@@ -10,9 +11,28 @@ export const routes: Routes = [
     loadComponent: () => import('./components/register/register').then((m) => m.RegisterComponent),
   },
   {
-    path: 'household',
-    loadChildren: () =>
-      import('./household/household.routes').then(m => m.HOUSEHOLD_ROUTES),
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/dashboard/dashboard').then((m) => m.DashboardComponent),
   },
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  // Flattened Household Routes
+  {
+    path: 'household/create',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/household/create-household/create-household').then(
+        (m) => m.CreateHouseholdComponent,
+      ),
+  },
+  {
+    path: 'household/join',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/household/join-household/join-household').then(
+        (m) => m.JoinHouseholdComponent,
+      ),
+  },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '**', redirectTo: 'dashboard' }, // Catch-all for stray routes
 ];

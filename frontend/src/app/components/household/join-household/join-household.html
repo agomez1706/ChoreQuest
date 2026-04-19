@@ -1,0 +1,59 @@
+<div class="auth-shell">
+  <div class="card">
+    <div class="card_header">
+      <img src="/logo.png" alt="ChoreQuest logo" class="logo" />
+      <h1 class="card_title">Join a household</h1>
+      <p class="card_subtitle">Enter the 6-character invite code from your roommate.</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="card_body">
+      <div class="field">
+        <label for="invite_code" class="field_label">
+          Invite code <span class="required">*</span>
+        </label>
+        <input
+          id="invite_code"
+          type="text"
+          formControlName="invite_code"
+          class="field_input field_input--code"
+          [class.field_input--error]="codeCtrl.invalid && codeCtrl.touched"
+          placeholder="ABC123"
+          maxlength="6"
+          autocomplete="off"
+          spellcheck="false"
+          (input)="onCodeInput($event)"
+        />
+
+        @if (codeCtrl.touched && codeCtrl.invalid) {
+          <div class="field_errors">
+            @if (codeCtrl.hasError('required')) {
+              <small class="field_error">Invite code is required.</small>
+            }
+            @if (codeCtrl.hasError('minlength') || codeCtrl.hasError('invalidCode')) {
+              <small class="field_error">Code must be exactly 6 letters or numbers.</small>
+            }
+          </div>
+        }
+      </div>
+
+      @if (errorMsg) {
+        <div class="alert alert--error" role="alert">
+          {{ errorMsg }}
+        </div>
+      }
+
+      <button type="submit" class="btn btn--primary btn--full" [disabled]="loading">
+        @if (!loading) {
+          <span>Join Household</span>
+        } @else {
+          <span class="spinner"></span>
+        }
+      </button>
+    </form>
+
+    <div class="card_footer">
+      Don't have a code?
+      <a routerLink="/household/create" class="link">Create a household</a>
+    </div>
+  </div>
+</div>

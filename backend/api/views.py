@@ -180,7 +180,7 @@ def get_my_household(request):
     """
     data, doc_ref = _get_user_household_doc(request.user.username)
     if not data:
-        return Response({'detail': 'Not in any household.'}, status=404)
+        return Response(None, status=200)
     
     return Response(_hydrate_household(data, doc_ref), status=200)
 

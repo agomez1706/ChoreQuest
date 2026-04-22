@@ -2,11 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import {
-  Household,
-  CreateHouseholdPayload,
-  JoinHouseholdPayload,
-} from '../models/household.model';
+import { Household, CreateHouseholdPayload, JoinHouseholdPayload } from '../models/household.model';
 
 const API_BASE = '/api/household';
 
@@ -20,27 +16,29 @@ export class HouseholdService {
     return this._household$.getValue();
   }
 
-  loadMyHousehold(): Observable<Household> {
-    return this.http.get<Household>(`${API_BASE}/me/`).pipe(
-      tap(h => this._household$.next(h)),
+  loadMyHousehold(): Observable<Household | null> {
+    return this.http.get<Household | null>(`${API_BASE}/me/`).pipe(
+      tap((h) => this._household$.next(h)),
       catchError(this.handleError),
     );
   }
 
   createHousehold(payload: CreateHouseholdPayload): Observable<Household> {
     return this.http.post<Household>(`${API_BASE}/create/`, payload).pipe(
-      tap(h => this._household$.next(h)),
+      tap((h) => this._household$.next(h)),
       catchError(this.handleError),
     );
   }
 
   joinHousehold(payload: JoinHouseholdPayload): Observable<Household> {
-    return this.http.post<Household>(`${API_BASE}/join/`, {
-      invite_code: payload.invite_code.toUpperCase().trim(),
-    }).pipe(
-      tap(h => this._household$.next(h)),
-      catchError(this.handleError),
-    );
+    return this.http
+      .post<Household>(`${API_BASE}/join/`, {
+        invite_code: payload.invite_code.toUpperCase().trim(),
+      })
+      .pipe(
+        tap((h) => this._household$.next(h)),
+        catchError(this.handleError),
+      );
   }
 
   leaveHousehold(): Observable<{ detail: string }> {
@@ -50,7 +48,9 @@ export class HouseholdService {
     );
   }
 
-  clearHousehold(): void { this._household$.next(null); }
+  clearHousehold(): void {
+    this._household$.next(null);
+  }
 
   private handleError(err: HttpErrorResponse): Observable<never> {
     const msg = err.error?.detail ?? err.error?.message ?? 'An unexpected error occurred.';

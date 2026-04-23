@@ -27,6 +27,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isProfileMenuOpen = false;
   isInitialLoading = true;
   isCreateTaskOpen = false;
+  tasksLoadError = '';
 
   currentUser: any = null;
   private authUnsubscribe: (() => void) | null = null;
@@ -56,9 +57,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onTaskCreated() {
+    this.reloadHouseholdTasks();
+  }
+
+  private reloadHouseholdTasks() {
+    this.tasksLoadError = '';
+
     // Tasks$ is already updated optimistically by TaskService,
     // but we do a full reload to guarantee accuracy.
-    this.taskService.loadHouseholdTasks().subscribe();
+    this.taskService.loadHouseholdTasks().subscribe({
+      next: () => {
+        this.cdr.detectChanges();
+      },
+      error: (err: Error) => {
+        console.error('Failed to load tasks:', err);
+        this.tasksLoadError = err.message;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   completeTask(taskId: string) {
@@ -121,9 +137,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         next: (household) => {
           this.isInitialLoading = false;
           if (household) {
-            this.taskService.loadHouseholdTasks().subscribe({
-              error: (err: Error) => console.error('Failed to load tasks:', err),
-            });
+            this.reloadHouseholdTasks();
           }
           this.cdr.detectChanges();
         },

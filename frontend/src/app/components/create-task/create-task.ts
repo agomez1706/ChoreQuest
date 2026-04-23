@@ -29,8 +29,14 @@ export class CreateTaskComponent implements OnInit {
 
   // Pre-fill today's date as a sensible default
   ngOnInit() {
-    const today = new Date();
-    this.due_date = today.toISOString().split('T')[0];
+    this.due_date = this.getLocalDateString(new Date());
+  }
+
+  private getLocalDateString(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   get isFormValid(): boolean {

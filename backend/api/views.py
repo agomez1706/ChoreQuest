@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.conf import settings
 from firebase_admin import firestore
+from .household_utils import _get_user_household_doc
 
 def _hydrate_household(data, household_ref):
     """
@@ -48,23 +49,6 @@ def _hydrate_household(data, household_ref):
 
     data['members'] = hydrated_members
     return data
-
-def _get_user_household_doc(uid):
-    """
-    Helper to find the household document where the user is a member.
-    Returns (data_dict, document_reference)
-    """
-    db = settings.FIREBASE_DB
-    docs = db.collection('households').where(
-        filter=firestore.FieldFilter('members', 'array_contains', uid)
-    ).limit(1).stream()
-    
-    for doc in docs:
-        data = doc.to_dict()
-        data['id'] = doc.id
-        return data, doc.reference
-        
-    return None, None
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

@@ -1,8 +1,21 @@
 <div class="modal-backdrop" (click)="close()">
-  <div class="modal-card card" (click)="$event.stopPropagation()">
+  <div
+    class="modal-card card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="create-task-title"
+    (click)="$event.stopPropagation()"
+  >
     <div class="modal-header">
-      <h3>Create New Task</h3>
-      <button class="close-btn" (click)="close()">✕</button>
+      <h3 id="create-task-title">Create New Task</h3>
+      <button
+        class="close-btn"
+        type="button"
+        aria-label="Close create task dialog"
+        (click)="close()"
+      >
+        ✕
+      </button>
     </div>
 
     <div class="modal-body">

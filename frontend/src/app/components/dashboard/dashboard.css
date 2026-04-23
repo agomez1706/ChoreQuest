@@ -173,13 +173,29 @@
   letter-spacing: 0.05em;
 }
 
-.filter-btn {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
+/* CREATE TASK BUTTON */
+.btn-create-task {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-create-task:hover {
+  background: #4338ca;
+}
+
+/* EMPTY TASKS */
+.empty-tasks {
+  text-align: center;
+  padding: 2rem 1rem;
   color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 /* TASK CARDS */
@@ -268,9 +284,9 @@
   background: #f3f4f6;
   color: #374151;
 }
-.tag--points {
-  background: #e0e7ff;
-  color: #3730a3;
+.tag--easy {
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .task-actions {
@@ -295,50 +311,18 @@
 .btn-complete:disabled {
   background: #e5e7eb;
   color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-complete--locked {
+  background: #e5e7eb !important;
+  color: #9ca3af !important;
+  font-style: italic;
 }
 
 .assignee {
   font-size: 0.75rem;
   color: var(--text-muted);
-}
-
-/* ACTIVITY LIST */
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 0.75rem;
-  flex-shrink: 0;
-}
-
-.activity-text {
-  margin: 0;
-  flex: 1;
-  font-size: 0.85rem;
-  color: var(--text-main);
-}
-
-.activity-time {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-left: 0.5rem;
 }
 
 /* EMPTY STATE */

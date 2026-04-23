@@ -1,101 +1,164 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { HouseholdService } from '../../services/household.service';
+import { TaskService } from '../../services/task';
+import { CreateTaskComponent } from '../create-task/create-task';
+import { Household, HouseholdMember } from '../../models/household.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CreateTaskComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private auth = inject(Auth);
   private router = inject(Router);
   private householdService = inject(HouseholdService);
+  private taskService = inject(TaskService);
   private cdr = inject(ChangeDetectorRef);
 
-  // Live Data from Logan's Sprint
   household$ = this.householdService.household$;
+  tasks$ = this.taskService.tasks$;
 
   isProfileMenuOpen = false;
-
   isInitialLoading = true;
+  isCreateTaskOpen = false;
+  tasksLoadError = '';
 
-  currentUser = this.auth.currentUser;
+  currentUser: any = null;
+  private authUnsubscribe: (() => void) | null = null;
 
   toggleProfileMenu() {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
   }
 
-  // --- PLACEHOLDER DATA FOR FUTURE SPRINTS ---
-  mockTasks = [
-    {
-      title: 'Take out trash',
-      dueDate: 'Today',
-      recurrence: 'Every 7 days',
-      urgency: 'Due today',
-      difficulty: 'Easy',
-      points: 10,
-      state: 'normal',
-    },
-    {
-      title: 'Wash dishes',
-      dueDate: 'Tomorrow',
-      recurrence: 'Every 2 days',
-      urgency: '',
-      difficulty: 'Medium',
-      points: 15,
-      state: 'normal',
-    },
-    {
-      title: 'Clean bathroom',
-      dueDate: 'Was due: Mar 27',
-      recurrence: '',
-      urgency: 'OVERDUE',
-      difficulty: 'Hard',
-      points: 25,
-      state: 'overdue',
-    },
-    {
-      title: 'Vacuum living room',
-      dueDate: 'Completed',
-      recurrence: '+20 pts earned',
-      urgency: '',
-      difficulty: '',
-      points: 0,
-      state: 'done',
-    },
-  ];
+  isAdmin(household: Household): boolean {
+    return household.admin_id === this.currentUser?.uid;
+  }
 
-  mockActivity = [
-    { user: 'Logan', action: 'completed Mop floors', time: '2m ago', color: '#10b981' },
-    { user: 'Kaiden', action: 'completed Empty recycling', time: '1h ago', color: '#6366f1' },
-    { user: 'Alex', action: 'Wipe counters is overdue', time: '3h ago', color: '#ef4444' },
-  ];
-  // ------------------------------------------
+  isAssignedToMe(assignedTo: string): boolean {
+    return assignedTo === this.currentUser?.uid;
+  }
 
-  ngOnInit() {
-    this.householdService.loadMyHousehold().subscribe({
+  getMembers(household: Household): HouseholdMember[] {
+    return household.members as HouseholdMember[];
+  }
+
+  openCreateTask() {
+    this.isCreateTaskOpen = true;
+  }
+
+  closeCreateTask() {
+    this.isCreateTaskOpen = false;
+  }
+
+  onTaskCreated() {
+    this.reloadHouseholdTasks();
+  }
+
+  private reloadHouseholdTasks() {
+    this.tasksLoadError = '';
+
+    // Tasks$ is already updated optimistically by TaskService,
+    // but we do a full reload to guarantee accuracy.
+    this.taskService.loadHouseholdTasks().subscribe({
       next: () => {
-        this.isInitialLoading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        this.isInitialLoading = false;
-        console.log('User not in a household or error occurred.');
+      error: (err: Error) => {
+        console.error('Failed to load tasks:', err);
+        this.tasksLoadError = err.message;
         this.cdr.detectChanges();
       },
     });
+  }
+
+  completeTask(taskId: string) {
+    this.taskService.completeTask(taskId).subscribe({
+      error: (err: Error) => alert(err.message),
+    });
+  }
+
+  getDifficultyClass(difficulty: string): string {
+    switch (difficulty) {
+      case 'Easy':
+        return 'tag--easy';
+      case 'Medium':
+        return 'tag--warning';
+      case 'Hard':
+        return 'tag--danger';
+      default:
+        return 'tag--neutral';
+    }
+  }
+
+  formatDueDate(dueDateStr: string | null): string {
+    if (!dueDateStr) return 'No due date';
+    const due = new Date(dueDateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    due.setHours(0, 0, 0, 0);
+    const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (diff < 0)
+      return `Was due: ${due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    return due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  getUrgency(dueDateStr: string | null, status: string): string {
+    if (status === 'completed') return '';
+    if (!dueDateStr) return '';
+    const due = new Date(dueDateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    due.setHours(0, 0, 0, 0);
+    const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+    if (diff < 0) return 'OVERDUE';
+    if (diff === 0) return 'Due today';
+    return '';
+  }
+
+  ngOnInit() {
+    this.authUnsubscribe = this.auth.onAuthStateChanged((user) => {
+      this.currentUser = user;
+
+      if (!user) {
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      this.householdService.loadMyHousehold().subscribe({
+        next: (household) => {
+          this.isInitialLoading = false;
+          if (household) {
+            this.reloadHouseholdTasks();
+          }
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.isInitialLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.authUnsubscribe) {
+      this.authUnsubscribe();
+    }
   }
 
   copyInviteCode(code: string) {
     navigator.clipboard
       .writeText(code)
       .then(() => {
-        // You can replace this with a fancy toast notification later if you want!
         alert(`Invite code ${code} copied to clipboard! Paste it to your roommate.`);
       })
       .catch((err) => {
@@ -107,9 +170,15 @@ export class DashboardComponent implements OnInit {
     try {
       await this.auth.signOut();
       this.householdService.clearHousehold();
+      this.taskService.clearTasks();
       this.router.navigate(['/login']);
     } catch (error) {
       console.error('Error logging out:', error);
     }
+  }
+
+  getMemberName(uid: string, household: Household): string {
+    const member = household.members.find((m) => m.id === uid);
+    return member ? member.display_name : 'Unknown';
   }
 }

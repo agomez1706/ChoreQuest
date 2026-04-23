@@ -13,13 +13,14 @@ export interface Household {
   admin_id: string;
   member_count: number;
   is_full: boolean;
-  members: string[];
+  members: HouseholdMember[]; // Updated: backend returns hydrated objects, not plain UIDs
   created_at?: string;
 }
 
 export interface CreateHouseholdPayload {
   name: string;
 }
+
 export interface JoinHouseholdPayload {
   invite_code: string;
 }

@@ -1,0 +1,69 @@
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-card card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create New Task</h3>
+      <button class="close-btn" (click)="close()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      @if (errorMessage) {
+        <div class="error-banner">{{ errorMessage }}</div>
+      }
+
+      <div class="form-group">
+        <label for="task-title">Task Title</label>
+        <input
+          id="task-title"
+          type="text"
+          [(ngModel)]="title"
+          placeholder="e.g. Take out trash"
+          maxlength="100"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="task-assignee">Assign To</label>
+        <select id="task-assignee" [(ngModel)]="assigned_to" class="form-input">
+          <option value="" disabled>Select a member...</option>
+          @for (member of members; track member.id) {
+            <option [value]="member.id">{{ member.display_name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="task-due">Due Date</label>
+        <input id="task-due" type="date" [(ngModel)]="due_date" class="form-input" />
+      </div>
+
+      <div class="form-group">
+        <label>Difficulty</label>
+        <div class="difficulty-group">
+          @for (level of ['Easy', 'Medium', 'Hard']; track level) {
+            <button
+              type="button"
+              class="difficulty-btn"
+              [class.active]="difficulty === level"
+              [attr.data-level]="level"
+              (click)="difficulty = $any(level)"
+            >
+              {{ level }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn--outline" (click)="close()" [disabled]="isSubmitting">Cancel</button>
+      <button class="btn btn--primary" (click)="submit()" [disabled]="!isFormValid || isSubmitting">
+        @if (isSubmitting) {
+          Creating...
+        } @else {
+          Create Task
+        }
+      </button>
+    </div>
+  </div>
+</div>

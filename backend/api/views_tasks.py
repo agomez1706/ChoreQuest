@@ -5,24 +5,18 @@ from django.conf import settings
 from firebase_admin import firestore
 import uuid
 from datetime import datetime
+from .household_utils import _get_user_household_doc
 
 
-def _get_user_household_doc(uid):
+def _serialize_task(task):
     """
-    Helper to find the household document where the user is a member.
-    Returns (data_dict, document_reference)
+    Convert Firestore datetime values into JSON-serializable ISO strings.
     """
-    db = settings.FIREBASE_DB
-    docs = db.collection('households').where(
-        filter=firestore.FieldFilter('members', 'array_contains', uid)
-    ).limit(1).stream()
-
-    for doc in docs:
-        data = doc.to_dict()
-        data['id'] = doc.id
-        return data, doc.reference
-
-    return None, None
+    if hasattr(task.get('due_date'), 'isoformat'):
+        task['due_date'] = task['due_date'].isoformat()
+    if hasattr(task.get('created_at'), 'isoformat'):
+        task['created_at'] = task['created_at'].isoformat()
+    return task
 
 
 @api_view(['POST'])
@@ -84,9 +78,10 @@ def create_task(request):
 
     household_ref.collection('tasks').document(task_id).set(task_data)
 
-    # Return serializable version
-    task_data['due_date'] = due_date_str if due_date_str else None
-    task_data['created_at'] = datetime.utcnow().isoformat()
+    # Read back the persisted document so the response matches Firestore data.
+    created_task_doc = household_ref.collection('tasks').document(task_id).get()
+    task_data = created_task_doc.to_dict() if created_task_doc.exists else task_data
+    task_data = _serialize_task(task_data)
 
     return Response(task_data, status=201)
 
@@ -109,13 +104,7 @@ def get_household_tasks(request):
 
     tasks = []
     for doc in task_docs:
-        task = doc.to_dict()
-        # Serialize Firestore timestamps
-        if hasattr(task.get('due_date'), 'isoformat'):
-            task['due_date'] = task['due_date'].isoformat()
-        if hasattr(task.get('created_at'), 'isoformat'):
-            task['created_at'] = task['created_at'].isoformat()
-        tasks.append(task)
+        tasks.append(_serialize_task(doc.to_dict()))
 
     return Response(tasks, status=200)
 

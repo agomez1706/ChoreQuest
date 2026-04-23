@@ -70,6 +70,12 @@
           </div>
         </div>
 
+        @if (tasksLoadError) {
+          <div class="error-banner card">
+            {{ tasksLoadError }}
+          </div>
+        }
+
         <section class="section">
           <div class="section-header">
             <h3>ALL TASKS</h3>

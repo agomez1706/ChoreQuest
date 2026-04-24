@@ -136,12 +136,12 @@
                             <span class="tag tag--danger">OVERDUE</span>
                           }
                           <span class="tag tag--neutral">{{ task.difficulty }}</span>
-                          @if ((task.points ?? 0) > 0) {
+                          @if (task.points > 0) {
                             <span class="tag tag--points">+{{ task.points }} pts</span>
                           }
                         </div>
                       } @else {
-                        @if ((task.points ?? 0) > 0) {
+                        @if (task.points > 0) {
                           <div class="task-tags">
                             <span class="tag tag--points-earned"
                               >+{{ task.points }} pts earned</span

@@ -35,7 +35,8 @@
       <div class="task-checkbox">
         <input type="checkbox"
                [checked]="task.status === 'completed'"
-               [disabled]="true" />
+               [disabled]="true"
+               [attr.aria-label]="'Task status for ' + task.title + ': ' + (task.status === 'completed' ? 'completed' : 'not completed')" />
       </div>
 
       <!-- Task details -->

@@ -25,47 +25,85 @@
 
       <div class="form-group">
         <label for="task-title">Task Title</label>
-        <input
-          id="task-title"
-          type="text"
-          [(ngModel)]="title"
-          placeholder="e.g. Take out trash"
-          maxlength="100"
-          class="form-input"
-        />
+        <mat-form-field appearance="outline" class="material-field no-floating-label">
+          <input
+            matInput
+            id="task-title"
+            type="text"
+            [(ngModel)]="title"
+            placeholder="e.g. Take out trash"
+            maxlength="100"
+            class="material-field"
+          />
+        </mat-form-field>
       </div>
 
       <div class="form-group">
         <label for="task-assignee">Assign To</label>
-        <select id="task-assignee" [(ngModel)]="assigned_to" class="form-input">
-          <option value="" disabled>Select a member...</option>
-          @for (member of members; track member.id) {
-            <option [value]="member.id">{{ member.display_name }}</option>
-          }
-        </select>
+        <mat-form-field appearance="outline" class="material-field no-floating-label">
+          <mat-select
+            id="task-assignee"
+            [(ngModel)]="assigned_to"
+            panelClass="custom-select-panel"
+            placeholder="Select a member..."
+            class="material-field"
+          >
+            @for (member of members; track member.id) {
+              <mat-option [value]="member.id">{{ member.display_name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
       </div>
 
       <div class="form-group">
         <label for="task-due">Due Date</label>
-        <input id="task-due" type="date" [(ngModel)]="due_date" class="form-input" />
+        <mat-form-field appearance="outline" class="material-field no-floating-label">
+          <input
+            matInput
+            id="task-due"
+            [matDatepicker]="picker"
+            [(ngModel)]="due_date"
+            readonly
+            (click)="picker.open()"
+            class="material-field"
+          />
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
       </div>
 
       <div class="form-group">
         <label>Difficulty</label>
-        <div class="difficulty-group">
-          @for (level of ['Easy', 'Medium', 'Hard']; track level) {
-            <button
-              type="button"
-              class="difficulty-btn"
-              [class.active]="difficulty === level"
-              [attr.data-level]="level"
-              (click)="difficulty = $any(level)"
-            >
-              {{ level }}
-            </button>
-          }
-        </div>
+        <mat-button-toggle-group
+          class="difficulty-toggle-group"
+          name="difficulty"
+          [(ngModel)]="difficulty"
+          aria-label="Task difficulty"
+        >
+          <mat-button-toggle class="easy-toggle" value="Easy">Easy</mat-button-toggle>
+          <mat-button-toggle class="medium-toggle" value="Medium">Medium</mat-button-toggle>
+          <mat-button-toggle class="hard-toggle" value="Hard">Hard</mat-button-toggle>
+        </mat-button-toggle-group>
       </div>
+
+      <div class="form-group">
+        <label for="task-points">Point Value</label>
+        <mat-form-field appearance="outline" class="material-field points-field no-floating-label">
+          <span matPrefix class="points-prefix">⭐</span>
+          <input
+            matInput
+            id="task-points"
+            type="number"
+            [(ngModel)]="points"
+            min="0"
+            step="1"
+            placeholder="e.g. 10"
+            class="material-field"
+          />
+          <span matSuffix class="points-suffix">pts</span>
+        </mat-form-field>
+      </div>
+      <p class="form-hint">Points awarded to the member when they complete this task.</p>
     </div>
 
     <div class="modal-footer">

@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
+import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
 import { HouseholdService } from '../../services/household.service';
 import { TaskService } from '../../services/task';
 import { CreateTaskComponent } from '../create-task/create-task';
@@ -16,6 +17,7 @@ import { Household, HouseholdMember } from '../../models/household.model';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private auth = inject(Auth);
+  private firestore = inject(Firestore);
   private router = inject(Router);
   private householdService = inject(HouseholdService);
   private taskService = inject(TaskService);
@@ -30,7 +32,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   tasksLoadError = '';
 
   currentUser: any = null;
+  currentUserPoints = 0;
+
   private authUnsubscribe: (() => void) | null = null;
+  private pointsUnsubscribe: (() => void) | null = null;
 
   toggleProfileMenu() {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
@@ -62,9 +67,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private reloadHouseholdTasks() {
     this.tasksLoadError = '';
-
-    // Tasks$ is already updated optimistically by TaskService,
-    // but we do a full reload to guarantee accuracy.
     this.taskService.loadHouseholdTasks().subscribe({
       next: () => {
         this.cdr.detectChanges();
@@ -74,6 +76,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.tasksLoadError = err.message;
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  private subscribeToUserPoints(uid: string) {
+    // Unsubscribe from any previous listener first
+    if (this.pointsUnsubscribe) {
+      this.pointsUnsubscribe();
+    }
+
+    const userDocRef = doc(this.firestore, `users/${uid}`);
+    this.pointsUnsubscribe = onSnapshot(userDocRef, (snapshot) => {
+      if (snapshot.exists()) {
+        this.currentUserPoints = snapshot.data()['points'] ?? 0;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -133,6 +150,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // Subscribe to live point updates for this user
+      this.subscribeToUserPoints(user.uid);
+
       this.householdService.loadMyHousehold().subscribe({
         next: (household) => {
           this.isInitialLoading = false;
@@ -152,6 +172,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.authUnsubscribe) {
       this.authUnsubscribe();
+    }
+    if (this.pointsUnsubscribe) {
+      this.pointsUnsubscribe();
     }
   }
 

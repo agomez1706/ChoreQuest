@@ -7,6 +7,7 @@ export interface Task {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   status: 'pending' | 'completed';
   created_at: string;
+  points: number;
 }
 
 export interface CreateTaskPayload {
@@ -14,4 +15,5 @@ export interface CreateTaskPayload {
   assigned_to: string;
   due_date: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
+  points: number;
 }

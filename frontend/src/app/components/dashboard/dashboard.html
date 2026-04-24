@@ -13,6 +13,12 @@
       }
     </div>
     <div class="header-right">
+      <!-- Points counter -->
+      <div class="points-counter" title="Your total points">
+        <span class="points-star">⭐</span>
+        <span class="points-value">{{ currentUserPoints }}</span>
+      </div>
+
       <div class="profile-menu-container">
         <div class="avatar" (click)="toggleProfileMenu()" title="Profile Menu">
           {{ (currentUser?.displayName || currentUser?.email || '?').charAt(0).toUpperCase() }}
@@ -22,6 +28,7 @@
           <div class="profile-dropdown card">
             <div class="dropdown-header">
               <strong>{{ currentUser?.displayName || currentUser?.email || 'My Profile' }}</strong>
+              <p class="dropdown-points">⭐ {{ currentUserPoints }} pts</p>
             </div>
             <hr class="dropdown-divider" />
             <ul class="dropdown-list">
@@ -129,7 +136,18 @@
                             <span class="tag tag--danger">OVERDUE</span>
                           }
                           <span class="tag tag--neutral">{{ task.difficulty }}</span>
+                          @if (task.points > 0) {
+                            <span class="tag tag--points">+{{ task.points }} pts</span>
+                          }
                         </div>
+                      } @else {
+                        @if (task.points > 0) {
+                          <div class="task-tags">
+                            <span class="tag tag--points-earned"
+                              >+{{ task.points }} pts earned</span
+                            >
+                          </div>
+                        }
                       }
                     </div>
 

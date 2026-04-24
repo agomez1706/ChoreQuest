@@ -40,6 +40,14 @@ def create_task(request):
     due_date_str = request.data.get('due_date', '').strip()
     difficulty = request.data.get('difficulty', 'Easy').strip()
 
+    # Points: default to 0 if not provided, reject negative values
+    try:
+        points = int(request.data.get('points', 0))
+        if points < 0:
+            return Response({'detail': 'Points cannot be negative.'}, status=400)
+    except (ValueError, TypeError):
+        return Response({'detail': 'Points must be a whole number.'}, status=400)
+
     if not title:
         return Response({'detail': 'Task title is required.'}, status=400)
     if not assigned_to:
@@ -72,6 +80,7 @@ def create_task(request):
         'created_by': uid,
         'due_date': due_date,
         'difficulty': difficulty,
+        'points': points,
         'status': 'pending',
         'created_at': firestore.SERVER_TIMESTAMP,
     }
@@ -103,7 +112,11 @@ def get_household_tasks(request):
 
     tasks = []
     for doc in task_docs:
-        tasks.append(_serialize_task(doc.to_dict()))
+        task = doc.to_dict()
+        # Backwards compatibility: tasks created before points were added default to 0
+        if 'points' not in task:
+            task['points'] = 0
+        tasks.append(_serialize_task(task))
 
     return Response(tasks, status=200)
 
@@ -113,30 +126,76 @@ def get_household_tasks(request):
 def complete_task(request, task_id):
     """
     Marks a task as completed. Only the assigned user can complete it.
+    Awards the task's point value to the assigned user's points total in Firestore.
+    Uses a transaction to make completion + points award atomic and prevent race conditions.
     """
     uid = request.user.username
+    db = settings.FIREBASE_DB
 
     household_data, household_ref = _get_user_household_doc(uid)
     if not household_data:
         return Response({'detail': 'You are not in a household.'}, status=400)
 
     task_ref = household_ref.collection('tasks').document(task_id)
-    task_doc = task_ref.get()
 
+    # Initial check: task exists and user is assigned
+    task_doc = task_ref.get()
     if not task_doc.exists:
         return Response({'detail': 'Task not found.'}, status=404)
 
     task = task_doc.to_dict()
-
     if task.get('assigned_to') != uid:
         return Response({'detail': 'Only the assigned user can complete this task.'}, status=403)
 
-    if task.get('status') == 'completed':
-        return Response({'detail': 'Task is already completed.'}, status=400)
+    # Define transaction logic: atomically update task status and award points
+    @firestore.transactional
+    def update_task_and_award_points(transaction):
+        # Read task within transaction
+        task_doc_tx = task_ref.get(transaction=transaction)
+        if not task_doc_tx.exists:
+            raise ValueError('Task not found.')
 
-    task_ref.update({
-        'status': 'completed',
-        'completed_at': firestore.SERVER_TIMESTAMP,
-    })
+        task_tx = task_doc_tx.to_dict()
 
-    return Response({'detail': 'Task marked as completed.'}, status=200)
+        # Verify task is still pending (idempotent guard)
+        if task_tx.get('status') == 'completed':
+            raise ValueError('Task is already completed.')
+
+        # Normalize points to int, clamp to non-negative
+        points_to_award = task_tx.get('points', 0)
+        try:
+            points_to_award = int(points_to_award)
+            if points_to_award < 0:
+                points_to_award = 0
+        except (ValueError, TypeError):
+            points_to_award = 0
+
+        # Update task: mark completed and record point-award state.
+        transaction.update(task_ref, {
+            'status': 'completed',
+            'completed_at': firestore.SERVER_TIMESTAMP,
+            # Idempotency flag: prevents double-awarding points if this transaction is retried.
+            'points_awarded': True,
+        })
+
+        # Award points if any
+        if points_to_award > 0:
+            user_ref = db.collection('users').document(uid)
+            transaction.update(user_ref, {
+                'points': firestore.Increment(points_to_award)
+            })
+
+        return points_to_award
+
+    try:
+        transaction = db.transaction()
+        points_awarded = update_task_and_award_points(transaction)
+        return Response({
+            'detail': 'Task marked as completed.',
+            'points_awarded': points_awarded,
+        }, status=200)
+    except ValueError as e:
+        if 'already completed' in str(e):
+            return Response({'detail': 'Task is already completed.'}, status=400)
+        else:
+            return Response({'detail': str(e)}, status=400)

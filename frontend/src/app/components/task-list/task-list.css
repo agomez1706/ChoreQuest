@@ -170,9 +170,6 @@
   gap: 0.5rem;
   margin-left: auto;
   align-self: center;
-  position: relative;
-  top: 50%;
-  transform: translateY(0%);
 }
 
 .btn-complete {

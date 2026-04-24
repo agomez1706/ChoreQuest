@@ -10,7 +10,7 @@
   <div class="error-banner card">{{ tasksLoadError }}</div>
   }
 
-  @if (tasks.length === 0) {
+  @if (!tasksLoadError && tasks.length === 0) {
   <div class="empty-tasks card">
     <p>
       No tasks yet.

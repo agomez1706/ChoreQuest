@@ -1,7 +1,7 @@
-import { Component, inject, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Task } from '../../models/task.model';
-import { Household, HouseholdMember } from '../../models/household.model';
+import { Household } from '../../models/household.model';
 
 @Component({
   selector: 'app-task-list',

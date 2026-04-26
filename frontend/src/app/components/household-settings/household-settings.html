@@ -1,0 +1,101 @@
+<div class="settings-page-wrapper">
+  <div class="settings-container">
+    
+    <div class="header-nav">
+      <button class="back-btn" routerLink="/dashboard">← Back to Dashboard</button>
+    </div>
+
+    <div class="header-row">
+      <h2>Household Settings</h2>
+      <span class="badge admin-badge">Admin</span>
+    </div>
+
+    <div class="settings-grid">
+      
+      <div class="grid-column">
+        <div class="settings-section card">
+          <label>HOUSEHOLD NAME</label>
+          <p class="helper-text">This name is visible to all members.</p>
+          <div class="input-group">
+            <input type="text" [(ngModel)]="householdName" placeholder="The Heavy Lifters">
+            <button class="btn-primary" (click)='saveName()'>Save Name</button>
+          </div>
+        </div>
+
+        <div class="members-section card">
+          <label>MEMBERS (4 / 6)</label>
+          <div class="member-list">
+            <div class="member-item">
+              <div class="member-info">
+                <div class="avatar-sm">GT</div>
+                <div>
+                  <strong>George Tannious</strong>
+                  <span class="member-role">Admin <span class="you-tag">(You)</span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="member-item">
+              <div class="member-info">
+                <div class="avatar-sm">LS</div>
+                <div>
+                  <strong>Logan Schmaltz</strong>
+                  <span class="member-role">Member</span>
+                </div>
+              </div>
+              <button class="btn-remove">Remove</button>
+            </div>
+
+            <div class="member-item">
+              <div class="member-info">
+                <div class="avatar-sm">KW</div>
+                <div>
+                  <strong>Kaiden Wanna</strong>
+                  <span class="member-role">Member</span>
+                </div>
+              </div>
+              <button class="btn-remove">Remove</button>
+            </div>
+
+            <div class="member-item">
+              <div class="member-info">
+                <div class="avatar-sm">AG</div>
+                <div>
+                  <strong>Alex Gomez</strong>
+                  <span class="member-role">Member</span>
+                </div>
+              </div>
+              <button class="btn-remove">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-column">
+        <div class="invite-section card">
+          <label>INVITE CODE</label>
+          <div class="code-box">
+            <span class="code-text">{{ inviteCode }}</span>
+            <button class="btn-copy" (click)="copyCode()">📋 Copy</button>
+          </div>
+          <p class="helper-text">Share this code with roommates to join (max 6 members).</p>
+        </div>
+
+        <div class="danger-zone-section card">
+          <h3 class="danger-title">DANGER ZONE</h3>
+          
+          <button class="btn-danger-solid" (click)="resetLeaderboard()">
+            Reset Leaderboard
+          </button>
+          <p class="danger-subtext">Sets all member points to zero for the new cycle.</p>
+
+          <button class="btn-danger-outline mt-3" (click)="dissolveHousehold()">
+             Dissolve Household
+          </button>
+          <p class="danger-subtext">Removes all members and permanently deletes this household.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

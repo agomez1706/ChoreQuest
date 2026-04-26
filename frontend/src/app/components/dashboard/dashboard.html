@@ -29,8 +29,8 @@
             </div>
             <hr class="dropdown-divider" />
             <ul class="dropdown-list">
-              <li><a>Profile Settings</a></li>
-              <li><a>Household Settings</a></li>
+              <li><a routerLink="/profile" (click)="isProfileMenuOpen = false">Profile Settings</a></li>
+              <li><a routerLink="/household-settings" (click)="isProfileMenuOpen = false">Household Settings</a></li>
             </ul>
             <hr class="dropdown-divider" />
             <ul class="dropdown-list">
@@ -109,10 +109,7 @@
       <span class="icon">↗</span>
       <span>Leaderboard</span>
     </div>
-    <div class="nav-item">
-      <span class="icon">○</span>
-      <span>Profile</span>
-    </div>
+    
   </nav>
 
   @if (isCreateTaskOpen) {

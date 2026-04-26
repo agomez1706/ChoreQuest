@@ -4,10 +4,11 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
+  user, // Added for the stream
 } from '@angular/fire/auth';
-import { Firestore, doc, serverTimestamp, setDoc } from '@angular/fire/firestore';
-import {  docData } from '@angular/fire/firestore';
-import { from, Observable } from 'rxjs';
+import { Firestore, doc, serverTimestamp, setDoc, updateDoc, docData } from '@angular/fire/firestore';
+import { from, Observable, of } from 'rxjs'; // Added of
 import { switchMap } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
@@ -15,6 +16,7 @@ export class AuthService {
   private readonly auth = inject(Auth);
   private readonly firestore = inject(Firestore);
 
+  // --- EXISTING CODE (DO NOT EDIT) ---
   getUserProfile(): Observable<any> {
     return new Observable(observer => {
       const user = this.auth.currentUser;
@@ -61,4 +63,43 @@ export class AuthService {
   logout(): Observable<void> {
     return from(signOut(this.auth));
   }
+
+  // --- NEW CODE ADDED FOR SCRUM ---
+
+  /**
+   * REASON: Provides a real-time stream of the user profile.
+   * Any component using this will update immediately when Firestore updates.
+   */
+  getUserProfileStream(): Observable<any> {
+    return user(this.auth).pipe(
+      switchMap((currentUser) => {
+        if (!currentUser) return of(null);
+        const userDocRef = doc(this.firestore, `users/${currentUser.uid}`);
+        return docData(userDocRef);
+      })
+    );
+  }
+
+  /**
+   * REASON: Implements Password Reset via Firebase Email (The easiest method).
+   */
+  sendPasswordReset(email: string): Observable<void> {
+    return from(sendPasswordResetEmail(this.auth, email));
+  }
+
+  /**
+   * REASON: Updates the user's specific record in Firestore.
+   */
+ updateProfileName(newName: string): Observable<void> {
+  const currentUser = this.auth.currentUser;
+  if (!currentUser) throw new Error("No authenticated user found");
+  
+  const userDocRef = doc(this.firestore, `users/${currentUser.uid}`);
+  
+  // We use the EXACT field names used in your register() and getUserProfile()
+  return from(updateDoc(userDocRef, { 
+    display_name: newName, // This matches your register logic
+    displayName: newName   // This matches standard Firebase logic
+  }));
+}
 }

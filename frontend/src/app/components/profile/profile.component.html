@@ -1,62 +1,64 @@
-<div class="profile-container">
-  <div class="profile-header card">
-    <div class="avatar-large">{{ initials }}</div>
-    <div class="user-info">
-      <h2>{{ profileForm.get('displayName')?.value }}</h2>
-      <p class="email-text">{{ email }}</p>
-      
-      <div class="badge-row">
-        <span class="badge household-badge">{{ householdName }}</span>
-        @if (isAdmin) {
-          <span class="badge admin-badge">Admin</span>
-        }
-      </div>
-    </div>
-    <button class="logout-btn" (click)="onLogout()">Log out</button>
-  </div>
-
-  <div class="stats-strip">
-    <div class="stat-item">
-      <span class="stat-value">{{ totalPoints }}</span>
-      <span class="stat-label">Total Points</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-value">{{ leaderboardRank }}</span>
-      <span class="stat-label">Leaderboard Rank</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-value">{{ currentStreak }}</span>
-      <span class="stat-label">Current Streak</span>
-    </div>
-  </div>
-
-  <div class="settings-section card">
-    <label for="displayName">DISPLAY NAME</label>
-    <p class="helper-text">This name appears on the leaderboard.</p>
-    <form [formGroup]="profileForm" (ngSubmit)="onUpdateName()">
-      <input id="displayName" type="text" formControlName="displayName" placeholder="e.g. John Doe">
-      <button type="submit" class="btn-primary" [disabled]="profileForm.invalid">Update Name</button>
-    </form>
-  </div>
-
-  <div class="account-section card">
-    <button class="menu-item" (click)="onChangePassword()">
-      <span class="icon-lock">🔒</span> Change Password
-      <span class="arrow">›</span>
-    </button>
-  </div>
-
-  <div class="danger-zone">
-    <h3 class="danger-title">DANGER ZONE</h3>
+<div class="settings-page-wrapper">
+  <div class="profile-container">
     
-    <button class="btn-danger-outline" (click)="onLeaveHousehold()">
-      <span class="btn-text-bold">Leave Household</span>
-      <p class="btn-subtext">You will be removed from {{ householdName }}</p>
-    </button>
+    <div class="header-nav">
+      <button class="back-btn" routerLink="/dashboard">← Back to Dashboard</button>
+      <button class="logout-btn" (click)="onLogout()">Log out</button>
+    </div>
 
-    <button class="btn-danger-outline mt-3" (click)="onDeleteAccount()">
-      <span class="btn-text-bold">Delete Account</span>
-      <p class="btn-subtext">Permanently erase your data and points</p>
-    </button>
-  </div>
-</div>
+    <div class="settings-grid">
+      
+      <div class="grid-column">
+        <div class="profile-header card">
+          <div class="avatar-large">{{ initials || '?' }}</div>
+          <div class="user-info">
+            <h2>{{ currentDisplayName || 'ChoreQuester' }}</h2>
+            <p class="email-text">{{ email }}</p>
+            <div class="badge-row">
+              <span class="badge household-badge">{{ householdName }}</span>
+              @if (isAdmin) { <span class="badge admin-badge">Admin</span> }
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-strip card">
+          <div class="stat-item">
+            <span class="stat-value">{{ totalPoints }}</span>
+            <span class="stat-label">Total Points</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ leaderboardRank }}</span>
+            <span class="stat-label">Rank</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ currentStreak }}</span>
+            <span class="stat-label">Streak</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-column">
+        <div class="settings-section card">
+          <label>DISPLAY NAME</label>
+          <p class="helper-text">This name appears on the leaderboard.</p>
+          <form [formGroup]="profileForm" (ngSubmit)="onUpdateName()">
+            <input type="text" formControlName="displayName" placeholder="e.g. John Doe">
+            <button type="submit" class="btn-primary" [disabled]="profileForm.invalid">Update Name</button>
+          </form>
+        </div>
+
+        <div class="account-section card">
+          <button class="menu-item" (click)="onChangePassword()">
+            <span class="item-content">
+              <span class="icon">🔒</span> <span>Change Password</span>
+            </span>
+            <span class="arrow-right">›</span>
+          </button>
+        </div>
+
+        <div class="danger-zone card">
+          <h3 class="danger-title">DANGER ZONE</h3>
+          <button class="btn-danger-outline" (click)="onDeleteAccount()">Delete Account</button>
+          <p class="btn-subtext">Permanently erase your data and points</p>
+        </div>
+      </div>

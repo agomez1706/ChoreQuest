@@ -1,27 +1,29 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router'; // IMPORTANT
 import { AuthService } from '../../services/auth'; 
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
   standalone: true,
-  imports: [ReactiveFormsModule]
+  imports: [ReactiveFormsModule, RouterLink] // ADD RouterLink HERE
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
   profileForm: FormGroup;
-  initials: string = 'AG'; 
+  private profileSub?: Subscription;
+
+  // UI States
+  currentDisplayName: string = '';
+  initials: string = '';
+  email: string = '';
   householdName: string = 'The Heavy Lifters'; 
-  isAdmin: boolean = false; 
-  
-  // Placeholders for complex logic being held off for now
+  totalPoints: number = 0;
   leaderboardRank: string = '#3';
   currentStreak: string = '2d';
-
-  // This will now be dynamic from Firestore
-  totalPoints: number = 0;
-  email: string = 'alex.gomez@ndsu.edu';
+  isAdmin: boolean = false;
 
   constructor(private fb: FormBuilder, private authService: AuthService) {
     this.profileForm = this.fb.group({
@@ -30,51 +32,52 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Calling the new method we added to George's service
-    this.authService.getUserProfile().subscribe({
-      next: (data: any) => { 
-        if (data) {
-          this.totalPoints = data.points || 0; 
-          this.email = data.email || this.email;
-          this.profileForm.patchValue({
-            displayName: data.displayName || ''
-          });
-        }
-      },
-      error: (err: any) => {
-        console.error('Error fetching Firestore profile:', err);
+  this.profileSub = this.authService.getUserProfileStream().subscribe(data => {
+    if (data) {
+      // Logic: Look for 'display_name' first, then 'displayName'
+      const nameFromDb = data.display_name || data.displayName || 'ChoreQuester';
+      
+      this.currentDisplayName = nameFromDb;
+      this.initials = nameFromDb.charAt(0).toUpperCase();
+      this.email = data.email;
+
+      // This fills the input box automatically when you enter the page
+      if (!this.profileForm.dirty) {
+        this.profileForm.patchValue({ displayName: nameFromDb });
       }
-    });
-  }
+    }
+  });
+}
 
   onUpdateName(): void {
-    if (this.profileForm.valid) {
-      console.log('Updating Firestore display name to:', this.profileForm.value.displayName);
+  // 1. Check if the form is actually valid
+  if (this.profileForm.invalid) {
+    console.error('Form is invalid:', this.profileForm.errors);
+    return;
+  }
+
+  const newName = this.profileForm.value.displayName;
+  console.log('Attempting to update name to:', newName);
+
+  // 2. Call the service and MANUALLY subscribe
+  this.authService.updateProfileName(newName).subscribe({
+    next: () => {
+      console.log('Update successful!');
+      alert('Name updated successfully!');
+      this.profileForm.markAsPristine(); // Resets the "dirty" state
+    },
+    error: (err) => {
+      console.error('Firestore update failed:', err);
+      alert('Error: ' + err.message);
     }
+  });
+}
+
+  onChangePassword(): void {
+    this.authService.sendPasswordReset(this.email).subscribe(() => alert('Reset email sent!'));
   }
 
-  onChangePassword(): void { 
-    console.log('Navigating to change password...');
-  }
-
-  onLeaveHousehold(): void {
-    // Alert using the specific household name requirement
-    if (confirm(`Are you sure you want to leave ${this.householdName}?`)) {
-      alert(`Successfully left ${this.householdName}! (Simulation)`);
-      console.log('Interaction test: Leave Household simulation complete.');
-    }
-  }
-
-  onDeleteAccount(): void {
-    // New placeholder for account deletion
-    if (confirm("Are you sure you want to delete your account? This action is permanent!")) {
-      alert("Account deleted successfully! (Simulation - No backend changes made)");
-      console.log('Interaction test: Delete Account simulation complete.');
-      // Eventually, this would call this.authService.deleteUser()
-    }
-  }
-
-  onLogout(): void {
-    this.authService.logout();
-  }
+  onLogout(): void { this.authService.logout(); }
+  onDeleteAccount(): void { if(confirm("Delete account?")) alert("Account deleted."); }
+  ngOnDestroy(): void { this.profileSub?.unsubscribe(); }
 }

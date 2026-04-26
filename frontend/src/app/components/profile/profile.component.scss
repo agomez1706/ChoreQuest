@@ -1,175 +1,114 @@
 @use "sass:color";
-// --- Color Palette ---
+
 $primary-purple: #6c5ce7;
 $light-purple: #f3f0ff;
 $dark-text: #2d3436;
 $muted-text: #636e72;
-$border-color: #dfe6e9;
-$success-green: #55efc4;
 $success-dark: #00b894;
+$success-light: #e6faf5;
 $danger-red: #d63031;
-$danger-light: #ffebec;
-$bg-color: #f8f9fa;
 
-// --- Global Container ---
+.settings-page-wrapper {
+  display: flex;
+  justify-content: center;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 64px);
+  padding: 40px 20px;
+
+  @media (max-width: 600px) { padding: 0; background-color: white; }
+}
+
 .profile-container {
-  background-color: $bg-color;
-  min-height: 100vh;
-  padding: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: $dark-text;
+  width: 100%;
+  max-width: 900px;
 }
 
-// --- Reusable Card Style ---
+.header-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  .back-btn { 
+    background: none; border: none; color: $primary-purple; 
+    font-weight: 700; cursor: pointer; font-size: 16px;
+  }
+  .logout-btn { 
+    background: none; border: none; color: $danger-red; 
+    font-weight: 700; cursor: pointer; 
+  }
+}
+
+.settings-grid {
+  display: flex;
+  gap: 24px;
+  @media (max-width: 800px) { flex-direction: column; }
+
+  .grid-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
 .card {
-  background-color: #ffffff;
+  background: white;
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-// --- Profile Header ---
 .profile-header {
   display: flex;
   align-items: center;
-  position: relative; // To absolutely position the logout button
-
+  gap: 20px;
   .avatar-large {
-    width: 72px;
-    height: 72px;
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
     background-color: $primary-purple;
     color: white;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
-    flex-shrink: 0;
   }
-
   .user-info {
-    margin-left: 16px;
-
-    h2 {
-      margin: 0 0 4px 0;
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .email-text {
-      margin: 0 0 8px 0;
-      color: $muted-text;
-      font-size: 14px;
-    }
-  }
-
-  .logout-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    color: $danger-red;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    padding: 0;
-  }
-}
-
-// --- Badges ---
-.badge-row {
-  display: flex;
-  gap: 8px;
-
-  .badge {
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .household-badge {
-    background-color: $light-purple;
-    color: $primary-purple;
-  }
-
-  .admin-badge {
-    background-color: $primary-purple;
-    color: white;
-  }
-}
-
-// --- Stats Strip ---
-.stats-strip {
-  display: flex;
-  justify-content: space-between;
-  background-color: #ffffff;
-  border-radius: 8px;
-  padding: 16px 20px;
-  margin-bottom: 24px;
-  border: 1px solid rgba($success-green, 0.5); // Light green border from wireframe
-
-  .stat-item {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    flex: 1;
-
-    // Adds dividers between the stats
-    &:not(:last-child) {
-      border-right: 1px solid $border-color;
-    }
-
-    .stat-value {
-      font-size: 24px;
-      font-weight: 800;
-      color: $success-dark;
-      margin-bottom: 4px;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: $muted-text;
-      text-transform: capitalize;
+    justify-content: center;
+    
+    h2 {
+      margin: 0; // Removes default gaps that cause misalignment
+      font-size: 22px;
     }
   }
 }
 
-// --- Settings Section (Forms) ---
+.stats-strip {
+  display: flex;
+  justify-content: space-around;
+  border: 1px solid $success-dark;
+  background-color: $success-light;
+  .stat-item {
+    text-align: center;
+    flex: 1;
+    .stat-value { font-size: 28px; font-weight: 800; color: $success-dark; display: block; }
+    .stat-label { font-size: 12px; color: $muted-text; text-transform: uppercase; }
+  }
+}
+
 .settings-section {
-  label {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    color: $muted-text;
-    margin-bottom: 2px;
-    text-transform: uppercase;
-  }
-
-  .helper-text {
-    color: color.adjust($muted-text, $lightness: 15%);    color: lighten($muted-text, 15%);
-    margin: 0 0 12px 0;
-  }
-
-  input[type="text"] {
+  label { font-size: 12px; font-weight: 700; color: $muted-text; }
+  .helper-text { font-size: 13px; color: color.adjust($muted-text, $lightness: 20%); margin-bottom: 12px; }
+  input {
     width: 100%;
     padding: 14px;
-    border: 2px solid $primary-purple; // Purple outline from wireframe
+    border: 2px solid $primary-purple;
     border-radius: 8px;
-    font-size: 16px;
-    box-sizing: border-box; // Ensures padding doesn't break width
-    margin-bottom: 16px;
-    outline: none;
-    color: $dark-text;
-
-    &::placeholder {
-      color: #b2bec3;
-    }
+    margin-bottom: 12px;
   }
-
   .btn-primary {
     width: 100%;
     background-color: $success-dark;
@@ -177,83 +116,31 @@ $bg-color: #f8f9fa;
     padding: 14px;
     border: none;
     border-radius: 8px;
-    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:disabled {
-      background-color: #a4b0be;
-      cursor: not-allowed;
-    }
   }
 }
 
-// --- Account Section ---
-.account-section {
-  padding: 8px; // Tighter padding for a menu item look
-  
-  .menu-item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: none;
-    border: none;
-    padding: 12px;
-    font-size: 16px;
-    color: $dark-text;
-    cursor: pointer;
-
-    .icon-lock {
-      margin-right: 12px;
-    }
-
-    .arrow {
-      color: $muted-text;
-      font-size: 20px;
-    }
-  }
+.account-section .menu-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  background: none; border: none; padding: 0; cursor: pointer;
+  .item-content { display: flex; align-items: center; gap: 12px; font-weight: 600; }
 }
 
-// --- Danger Zone ---
 .danger-zone {
-  margin-top: 32px;
-
-  .danger-title {
-    font-size: 12px;
-    color: $danger-red;
-    margin: 0 0 8px 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
-  .mt-3 {
-    margin-top: 1rem;
-  }
-
+  text-align: center;
+  .danger-title { color: $danger-red; font-size: 12px; font-weight: 700; margin-bottom: 12px; text-align: left; }
   .btn-danger-outline {
     width: 100%;
-    margin-bottom: 0.5rem;
-    background-color: white;
     border: 1px solid $danger-red;
+    color: $danger-red;
+    background: white;
+    padding: 14px;
     border-radius: 8px;
-    padding: 16px;
-    text-align: center;
+    font-weight: 700;
     cursor: pointer;
-
-    .btn-text-bold {
-      display: block;
-      color: $danger-red;
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .btn-subtext {
-      margin: 0;
-      color: $muted-text;
-      font-size: 12px;
-    }
   }
+  .btn-subtext { font-size: 12px; color: $muted-text; margin-top: 8px; }
 }

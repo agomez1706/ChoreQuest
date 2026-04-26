@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './services/auth.guard';
 import { ProfileComponent } from './components/profile/profile.component'; // <-- 1. Import your new component
+import { HouseholdSettingsComponent } from './components/household-settings/household-settings'; 
 
 export const routes: Routes = [
   {
@@ -34,6 +35,13 @@ export const routes: Routes = [
         (m) => m.JoinHouseholdComponent,
       ),
   },
+
+  { 
+    path: 'household-settings', 
+    component: HouseholdSettingsComponent,
+    canActivate: [authGuard] 
+  },
+  
   { path: 'profile', component: ProfileComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: 'dashboard' }, // Catch-all for stray routes

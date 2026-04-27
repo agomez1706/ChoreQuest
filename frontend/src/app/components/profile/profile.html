@@ -1,0 +1,131 @@
+<div class="settings-page-wrapper">
+  <div class="profile-container">
+    <div class="header-nav">
+      <button class="back-btn" routerLink="/dashboard">← Back to Dashboard</button>
+      <button class="logout-btn" (click)="onLogout()">Log out</button>
+    </div>
+
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner-large"></div>
+        <p>Loading profile...</p>
+      </div>
+    } @else {
+      <div class="settings-stack">
+        <div class="profile-header card">
+          <div class="avatar-large">{{ initials || '?' }}</div>
+          <div class="user-info">
+            <h2>{{ currentDisplayName || 'ChoreQuester' }}</h2>
+            <p class="email-text">{{ email }}</p>
+            <div class="badge-row">
+              <span class="badge household-badge">{{ householdName }}</span>
+              @if (isAdmin) {
+                <span class="badge admin-badge">Admin</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-strip">
+          <div class="stat-item">
+            <span class="stat-value">{{ totalPoints }}</span>
+            <span class="stat-label">Total Points</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ leaderboardRank }}</span>
+            <span class="stat-label">Leaderboard Rank</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ currentStreak }}</span>
+            <span class="stat-label">Current Streak</span>
+          </div>
+        </div>
+
+        <div class="settings-section card">
+          <div class="section-header">
+            <label>DISPLAY NAME</label>
+            <span class="helper-text">This name appears on the leaderboard.</span>
+          </div>
+          <form [formGroup]="profileForm" (ngSubmit)="onUpdateName()">
+            <input type="text" formControlName="displayName" placeholder="e.g. John Doe" />
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="profileForm.invalid || profileForm.pristine"
+            >
+              Update Name
+            </button>
+          </form>
+        </div>
+
+        <div class="account-section card">
+          <label class="section-label-alone">ACCOUNT</label>
+          <button class="menu-item" (click)="onChangePassword()">
+            <span class="item-content">
+              <span class="icon">🔒</span> <span>Change Password</span>
+            </span>
+            <span class="arrow-right">›</span>
+          </button>
+        </div>
+
+        <div class="danger-zone-section card">
+          <label class="danger-label">DANGER ZONE</label>
+          <div class="danger-box">
+            <button class="btn-danger-outline" (click)="onDeleteAccount()">Delete Account</button>
+            @if (currentHousehold) {
+              <p class="btn-subtext">
+                Your account will be permanently deleted and you will be permanently removed from
+                {{ householdName }}.
+              </p>
+            } @else {
+              <p class="btn-subtext">Your account will be permanently deleted.</p>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (showDeleteAccountModal) {
+    <div class="modal-overlay" (click)="closeDeleteAccountModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>Delete Account</h3>
+        <p class="modal-desc">
+          This action is permanent. Enter your password to confirm account deletion.
+        </p>
+
+        <input
+          #deletePasswordInput
+          class="security-input"
+          type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          autofocus
+          [disabled]="isDeletingAccount"
+          (keydown.enter)="submitDeleteAccount(deletePasswordInput.value)"
+        />
+
+        @if (deleteAccountErrorMsg) {
+          <p class="security-error">{{ deleteAccountErrorMsg }}</p>
+        }
+
+        <div class="modal-actions">
+          <button
+            class="btn-cancel"
+            (click)="closeDeleteAccountModal()"
+            [disabled]="isDeletingAccount"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-delete-confirm"
+            (click)="submitDeleteAccount(deletePasswordInput.value)"
+            [disabled]="isDeletingAccount"
+          >
+            {{ isDeletingAccount ? 'Deleting...' : 'Delete Account' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

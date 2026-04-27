@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './services/auth.guard';
-import { ProfileComponent } from './components/profile/profile.component'; // <-- 1. Import your new component
-import { HouseholdSettingsComponent } from './components/household-settings/household-settings'; 
+import { ProfileComponent } from './components/profile/profile'; // <-- 1. Import your new component
+import { HouseholdSettingsComponent } from './components/household-settings/household-settings';
 
 export const routes: Routes = [
   {

@@ -8,14 +8,6 @@
   >
     <div class="modal-header">
       <h3 id="create-task-title">Create New Task</h3>
-      <button
-        class="close-btn"
-        type="button"
-        aria-label="Close create task dialog"
-        (click)="close()"
-      >
-        ✕
-      </button>
     </div>
 
     <div class="modal-body">
@@ -121,17 +113,16 @@
           <p class="form-hint">Points awarded to the member when they complete this task.</p>
         }
       </div>
-
-      <div class="modal-footer">
-        <button class="btn btn--outline" (click)="close()" [disabled]="isSubmitting">Cancel</button>
-        <button class="btn btn--primary" (click)="submit()" [disabled]="isSubmitting">
-          @if (isSubmitting) {
-            Creating...
-          } @else {
-            Create Task
-          }
-        </button>
-      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--outline" (click)="close()" [disabled]="isSubmitting">Cancel</button>
+      <button class="btn btn--primary" (click)="submit()" [disabled]="isSubmitting">
+        @if (isSubmitting) {
+          Creating...
+        } @else {
+          Create Task
+        }
+      </button>
     </div>
   </div>
 </div>

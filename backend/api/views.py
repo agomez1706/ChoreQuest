@@ -31,6 +31,7 @@ def _hydrate_household(data, household_ref):
         join_dates[m.id] = m_data.get('joined_at')
 
     hydrated_members = []
+    valid_uids = []
     for doc in user_docs:
         if doc.exists:
             uid = doc.id
@@ -39,6 +40,7 @@ def _hydrate_household(data, household_ref):
             ts = join_dates.get(uid)
             joined_at_str = ts.isoformat() if hasattr(ts, 'isoformat') else "Recently"
 
+            valid_uids.append(uid)
             hydrated_members.append({
                 "id": uid,
                 "display_name": user_info.get('display_name', 'Unknown User'),
@@ -46,6 +48,29 @@ def _hydrate_household(data, household_ref):
                 "is_admin": uid == admin_id,
                 "joined_at": joined_at_str
             })
+
+    # Self-heal stale household docs when deleted accounts leave orphaned member IDs.
+    stale_uids = [uid for uid in uids if uid not in set(valid_uids)]
+    if stale_uids:
+        if not valid_uids:
+            household_ref.delete()
+            return None
+
+        updates = {
+            'members': valid_uids,
+            'member_count': len(valid_uids),
+            'is_full': len(valid_uids) >= 6,
+        }
+
+        if admin_id not in valid_uids:
+            updates['admin_id'] = valid_uids[0]
+
+        household_ref.update(updates)
+
+        for stale_uid in stale_uids:
+            household_ref.collection('memberships').document(stale_uid).delete()
+
+        data.update(updates)
 
     data['members'] = hydrated_members
     return data
@@ -166,7 +191,10 @@ def get_my_household(request):
     if not data:
         return Response(None, status=200)
     
-    return Response(_hydrate_household(data, doc_ref), status=200)
+    hydrated = _hydrate_household(data, doc_ref)
+    if hydrated is None:
+        return Response(None, status=200)
+    return Response(hydrated, status=200)
 
 
 @api_view(['POST'])
@@ -191,6 +219,14 @@ def leave_household(request):
         doc_ref.delete()
         return Response({'detail': 'Household dissolved.'}, status=200)
         
+    admin_id = data.get('admin_id')
+    
+    # Reassign the departing member's tasks to the admin
+    tasks = doc_ref.collection('tasks').where('assigned_to', '==', uid).stream()
+    for task in tasks:
+        if task.to_dict().get('status') != 'completed':
+            task.reference.update({'assigned_to': admin_id})
+
     doc_ref.update({
         'members': firestore.ArrayRemove([uid]),
         'member_count': member_count - 1,

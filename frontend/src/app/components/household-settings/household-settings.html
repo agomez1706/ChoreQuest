@@ -1,101 +1,150 @@
 <div class="settings-page-wrapper">
-  <div class="settings-container">
-    
+  <div class="household-container">
     <div class="header-nav">
       <button class="back-btn" routerLink="/dashboard">← Back to Dashboard</button>
     </div>
 
-    <div class="header-row">
-      <h2>Household Settings</h2>
-      <span class="badge admin-badge">Admin</span>
-    </div>
-
-    <div class="settings-grid">
-      
-      <div class="grid-column">
-        <div class="settings-section card">
-          <label>HOUSEHOLD NAME</label>
-          <p class="helper-text">This name is visible to all members.</p>
-          <div class="input-group">
-            <input type="text" [(ngModel)]="householdName" placeholder="The Heavy Lifters">
-            <button class="btn-primary" (click)='saveName()'>Save Name</button>
-          </div>
-        </div>
-
-        <div class="members-section card">
-          <label>MEMBERS (4 / 6)</label>
-          <div class="member-list">
-            <div class="member-item">
-              <div class="member-info">
-                <div class="avatar-sm">GT</div>
-                <div>
-                  <strong>George Tannious</strong>
-                  <span class="member-role">Admin <span class="you-tag">(You)</span></span>
-                </div>
-              </div>
-            </div>
-
-            <div class="member-item">
-              <div class="member-info">
-                <div class="avatar-sm">LS</div>
-                <div>
-                  <strong>Logan Schmaltz</strong>
-                  <span class="member-role">Member</span>
-                </div>
-              </div>
-              <button class="btn-remove">Remove</button>
-            </div>
-
-            <div class="member-item">
-              <div class="member-info">
-                <div class="avatar-sm">KW</div>
-                <div>
-                  <strong>Kaiden Wanna</strong>
-                  <span class="member-role">Member</span>
-                </div>
-              </div>
-              <button class="btn-remove">Remove</button>
-            </div>
-
-            <div class="member-item">
-              <div class="member-info">
-                <div class="avatar-sm">AG</div>
-                <div>
-                  <strong>Alex Gomez</strong>
-                  <span class="member-role">Member</span>
-                </div>
-              </div>
-              <button class="btn-remove">Remove</button>
-            </div>
-          </div>
-        </div>
+    @if (household) {
+      <div class="header-row">
+        <h2>Household Settings</h2>
+        @if (isAdmin) {
+          <span class="badge admin-badge">Admin</span>
+        }
       </div>
 
-      <div class="grid-column">
-        <div class="invite-section card">
-          <label>INVITE CODE</label>
+      <div class="settings-stack">
+        <div class="settings-section card">
+          <label class="section-label">HOUSEHOLD NAME</label>
+          <div class="input-group">
+            <input
+              type="text"
+              [(ngModel)]="editName"
+              [disabled]="!isAdmin"
+              placeholder="Household Name"
+            />
+          </div>
+          @if (isAdmin) {
+            <button class="btn-primary mt-2" (click)="saveName()">Save Name</button>
+          }
+        </div>
+
+        <div class="settings-section card">
+          <label class="section-label">INVITE CODE</label>
           <div class="code-box">
-            <span class="code-text">{{ inviteCode }}</span>
+            <span class="code-text">{{ household.invite_code }}</span>
             <button class="btn-copy" (click)="copyCode()">📋 Copy</button>
           </div>
           <p class="helper-text">Share this code with roommates to join (max 6 members).</p>
         </div>
 
-        <div class="danger-zone-section card">
-          <h3 class="danger-title">DANGER ZONE</h3>
-          
-          <button class="btn-danger-solid" (click)="resetLeaderboard()">
-            Reset Leaderboard
-          </button>
-          <p class="danger-subtext">Sets all member points to zero for the new cycle.</p>
+        <div class="members-section card">
+          <label class="section-label">MEMBERS ({{ household.member_count }} / 6)</label>
+          <div class="member-list">
+            @for (member of household.members; track member.id) {
+              <div class="member-item">
+                <div class="member-info">
+                  <div class="avatar-sm">{{ member.display_name.charAt(0).toUpperCase() }}</div>
+                  <div>
+                    <strong>{{ member.display_name }}</strong>
+                    <span class="member-role">
+                      {{ member.id === household.admin_id ? 'Admin' : 'Member' }}
+                      @if (member.id === currentUserUid) {
+                        <span class="you-tag">(You)</span>
+                      }
+                    </span>
+                  </div>
+                </div>
+                @if (isAdmin && member.id !== currentUserUid) {
+                  <button class="btn-remove" (click)="removeMember(member.id)">Remove</button>
+                }
+              </div>
+            }
+          </div>
+        </div>
 
-          <button class="btn-danger-outline mt-3" (click)="dissolveHousehold()">
-             Dissolve Household
-          </button>
-          <p class="danger-subtext">Removes all members and permanently deletes this household.</p>
+        <div class="danger-zone-section card">
+          <label class="danger-label">DANGER ZONE</label>
+          <div class="danger-box">
+            @if (isAdmin) {
+              <button class="btn-danger-solid" (click)="resetLeaderboard()">
+                ↺ Reset Leaderboard
+              </button>
+              <p class="btn-subtext">Sets all member points to zero for the new cycle.</p>
+              @if (eligibleTransferMembers.length > 0) {
+                <button class="btn-warning-outline mt-3" (click)="openTransferModal()">
+                  👑 Transfer Ownership
+                </button>
+                <p class="btn-subtext">Pass household control to another member.</p>
+              }
+
+              <button class="btn-danger-outline mt-3" (click)="leaveHousehold()">
+                🚪 Leave Household
+              </button>
+              @if (household.member_count <= 1) {
+                <p class="btn-subtext">
+                  Leave the household. This will permanently delete the household and all tasks.
+                </p>
+              } @else {
+                <p class="btn-subtext">Leave the household and remove all your data.</p>
+              }
+
+              @if (household.member_count > 1) {
+                <button class="btn-danger-outline mt-3" (click)="dissolveHousehold()">
+                  ✕ Dissolve Household
+                </button>
+                <p class="btn-subtext">
+                  Removes all members and permanently deletes this household.
+                </p>
+              }
+            } @else {
+              <button class="btn-danger-outline" (click)="leaveHousehold()">
+                🚪 Leave Household
+              </button>
+              <p class="btn-subtext">You will be removed from {{ household.name }}.</p>
+            }
+          </div>
         </div>
       </div>
-
-    </div>
+    } @else if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner-large"></div>
+        <p>Loading household data...</p>
+      </div>
+    }
   </div>
+
+  @if (showTransferModal) {
+    <div class="modal-overlay" (click)="closeTransferModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>{{ transferModalTitle }}</h3>
+        <p class="modal-desc">{{ transferModalDescription }}</p>
+
+        <div class="transfer-list">
+          @for (member of eligibleTransferMembers; track member.id) {
+            <div
+              class="transfer-item"
+              [class.selected]="selectedTransferMemberId === member.id"
+              (click)="selectTransferMember(member.id)"
+            >
+              <div class="avatar-sm">{{ member.display_name.charAt(0).toUpperCase() }}</div>
+              <strong>{{ member.display_name }}</strong>
+            </div>
+          }
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="closeTransferModal()" [disabled]="isTransferring">
+            Cancel
+          </button>
+          <button
+            class="btn-primary"
+            (click)="confirmTransfer()"
+            [disabled]="!selectedTransferMemberId || isTransferring"
+          >
+            {{ transferConfirmButtonText }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

@@ -36,14 +36,13 @@ export const routes: Routes = [
       ),
   },
 
-  { 
-    path: 'household-settings', 
+  {
+    path: 'household-settings',
     component: HouseholdSettingsComponent,
-    canActivate: [authGuard] 
+    canActivate: [authGuard],
   },
-  
+
   { path: 'profile', component: ProfileComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: 'dashboard' }, // Catch-all for stray routes
- 
 ];

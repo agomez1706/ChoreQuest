@@ -15,6 +15,7 @@
         <div class="error-banner">{{ errorMessage }}</div>
       }
 
+      <!-- Title -->
       <div class="form-group">
         <label for="task-title">Task Title</label>
         <mat-form-field appearance="outline" class="material-field no-floating-label">
@@ -33,6 +34,7 @@
         }
       </div>
 
+      <!-- Assign To -->
       <div class="form-group">
         <label for="task-assignee">Assign To</label>
         <mat-form-field appearance="outline" class="material-field no-floating-label">
@@ -53,6 +55,7 @@
         }
       </div>
 
+      <!-- Due Date -->
       <div class="form-group">
         <label for="task-due">Due Date</label>
         <mat-form-field appearance="outline" class="material-field no-floating-label">
@@ -73,6 +76,7 @@
         }
       </div>
 
+      <!-- Difficulty -->
       <div class="form-group">
         <label>Difficulty</label>
         <mat-button-toggle-group
@@ -90,6 +94,7 @@
         }
       </div>
 
+      <!-- Point Value -->
       <div class="form-group">
         <label for="task-points">Point Value</label>
         <mat-form-field appearance="outline" class="material-field points-field no-floating-label">
@@ -106,14 +111,53 @@
           />
           <span matSuffix class="points-suffix">pts</span>
         </mat-form-field>
-
         @if (showValidationErrors && getPointsErrorMessage() !== null) {
           <p class="field-error-text">{{ getPointsErrorMessage() }}</p>
         } @else {
           <p class="form-hint">Points awarded to the member when they complete this task.</p>
         }
       </div>
+
+      <!-- Recurring Toggle -->
+      <div class="form-group recurring-group">
+        <div class="recurring-toggle-row">
+          <div class="recurring-label-block">
+            <span class="form-group-label">Recurring Task</span>
+            <span class="form-hint">Task resets automatically after completion</span>
+          </div>
+          <mat-slide-toggle
+            [(ngModel)]="is_recurring"
+            color="primary"
+            aria-label="Toggle recurring task"
+          />
+        </div>
+
+        @if (is_recurring) {
+          <div class="recurrence-interval-row">
+            <span class="recurring-interval-text">Repeat every</span>
+            <mat-form-field
+              appearance="outline"
+              class="material-field interval-field no-floating-label"
+            >
+              <input
+                matInput
+                type="number"
+                [(ngModel)]="recurrence_interval_days"
+                min="1"
+                step="1"
+                placeholder="7"
+                class="material-field"
+              />
+            </mat-form-field>
+            <span class="recurring-interval-text">days</span>
+          </div>
+          @if (showValidationErrors && getRecurrenceErrorMessage() !== null) {
+            <p class="field-error-text">{{ getRecurrenceErrorMessage() }}</p>
+          }
+        }
+      </div>
     </div>
+
     <div class="modal-footer">
       <button class="btn btn--outline" (click)="close()" [disabled]="isSubmitting">Cancel</button>
       <button class="btn btn--primary" (click)="submit()" [disabled]="isSubmitting">

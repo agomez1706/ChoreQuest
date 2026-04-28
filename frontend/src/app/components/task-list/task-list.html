@@ -67,13 +67,23 @@
                 @if (task.points > 0) {
                   <span class="tag tag--points">+{{ task.points }} pts</span>
                 }
+                @if (task.is_recurring && task.recurrence_interval_days) {
+                  <span class="tag tag--recurring"
+                    >🔁 Every {{ task.recurrence_interval_days }} days</span
+                  >
+                }
               </div>
             } @else {
-              @if (task.points > 0) {
-                <div class="task-tags">
+              <div class="task-tags">
+                @if (task.points > 0) {
                   <span class="tag tag--points-earned">+{{ task.points }} pts earned</span>
-                </div>
-              }
+                }
+                @if (task.is_recurring && task.recurrence_interval_days) {
+                  <span class="tag tag--recurring"
+                    >🔁 Resets in {{ task.recurrence_interval_days }} days</span
+                  >
+                }
+              </div>
             }
           </div>
 

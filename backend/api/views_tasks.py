@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from firebase_admin import firestore
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from .household_utils import _get_user_household_doc
 
 
@@ -40,13 +40,30 @@ def create_task(request):
     due_date_str = request.data.get('due_date', '').strip()
     difficulty = request.data.get('difficulty', 'Easy').strip()
 
-    # Points: default to 0 if not provided, reject negative values
+    # Points
     try:
         points = int(request.data.get('points', 0))
         if points < 0:
             return Response({'detail': 'Points cannot be negative.'}, status=400)
     except (ValueError, TypeError):
         return Response({'detail': 'Points must be a whole number.'}, status=400)
+
+    # Recurring fields
+    is_recurring = bool(request.data.get('is_recurring', False))
+    recurrence_interval_days = None
+    if is_recurring:
+        try:
+            recurrence_interval_days = int(request.data.get('recurrence_interval_days', 0))
+            if recurrence_interval_days < 1:
+                return Response(
+                    {'detail': 'Recurrence interval must be at least 1 day.'},
+                    status=400
+                )
+        except (ValueError, TypeError):
+            return Response(
+                {'detail': 'Recurrence interval must be a whole number of days.'},
+                status=400
+            )
 
     if not title:
         return Response({'detail': 'Task title is required.'}, status=400)
@@ -69,9 +86,7 @@ def create_task(request):
     try:
         if due_date_str:
             clean_date = due_date_str.split('T')[0]
-            
             due_date = datetime.strptime(clean_date, "%Y-%m-%d").replace(hour=12)
-            
             due_date = due_date.replace(tzinfo=timezone.utc)
         else:
             due_date = None
@@ -89,6 +104,8 @@ def create_task(request):
         'difficulty': difficulty,
         'points': points,
         'status': 'pending',
+        'is_recurring': is_recurring,
+        'recurrence_interval_days': recurrence_interval_days,
         'created_at': firestore.SERVER_TIMESTAMP,
     }
 
@@ -120,9 +137,13 @@ def get_household_tasks(request):
     tasks = []
     for doc in task_docs:
         task = doc.to_dict()
-        # Backwards compatibility: tasks created before points were added default to 0
+        # Backwards compatibility for tasks created before these fields existed
         if 'points' not in task:
             task['points'] = 0
+        if 'is_recurring' not in task:
+            task['is_recurring'] = False
+        if 'recurrence_interval_days' not in task:
+            task['recurrence_interval_days'] = None
         tasks.append(_serialize_task(task))
 
     return Response(tasks, status=200)
@@ -133,8 +154,14 @@ def get_household_tasks(request):
 def complete_task(request, task_id):
     """
     Marks a task as completed. Only the assigned user can complete it.
-    Awards the task's point value to the assigned user's points total in Firestore.
-    Uses a transaction to make completion + points award atomic and prevent race conditions.
+    Awards points to the user.
+
+    If the task is recurring:
+      - Resets status back to 'pending'
+      - Advances due_date by recurrence_interval_days
+      - Points are still awarded for the completion
+
+    Uses a Firestore transaction for atomicity.
     """
     uid = request.user.username
     db = settings.FIREBASE_DB
@@ -145,7 +172,7 @@ def complete_task(request, task_id):
 
     task_ref = household_ref.collection('tasks').document(task_id)
 
-    # Initial check: task exists and user is assigned
+    # Pre-check outside transaction for fast 403/404 responses
     task_doc = task_ref.get()
     if not task_doc.exists:
         return Response({'detail': 'Task not found.'}, status=404)
@@ -154,55 +181,76 @@ def complete_task(request, task_id):
     if task.get('assigned_to') != uid:
         return Response({'detail': 'Only the assigned user can complete this task.'}, status=403)
 
-    # Define transaction logic: atomically update task status and award points
     @firestore.transactional
     def update_task_and_award_points(transaction):
-        # Read task within transaction
         task_doc_tx = task_ref.get(transaction=transaction)
         if not task_doc_tx.exists:
             raise ValueError('Task not found.')
 
         task_tx = task_doc_tx.to_dict()
 
-        # Verify task is still pending (idempotent guard)
         if task_tx.get('status') == 'completed':
             raise ValueError('Task is already completed.')
 
-        # Normalize points to int, clamp to non-negative
+        # Normalize points
         points_to_award = task_tx.get('points', 0)
         try:
-            points_to_award = int(points_to_award)
-            if points_to_award < 0:
-                points_to_award = 0
+            points_to_award = max(0, int(points_to_award))
         except (ValueError, TypeError):
             points_to_award = 0
 
-        # Update task: mark completed and record point-award state.
-        transaction.update(task_ref, {
-            'status': 'completed',
-            'completed_at': firestore.SERVER_TIMESTAMP,
-            # Idempotency flag: prevents double-awarding points if this transaction is retried.
-            'points_awarded': True,
-        })
+        is_recurring = task_tx.get('is_recurring', False)
+        interval = task_tx.get('recurrence_interval_days', None)
 
-        # Award points if any
+        if is_recurring and interval and int(interval) >= 1:
+            # Advance the due date instead of marking completed
+            current_due = task_tx.get('due_date')
+
+            if hasattr(current_due, 'isoformat'):
+                # Firestore Timestamp — already a datetime
+                base_date = current_due
+            elif isinstance(current_due, str):
+                try:
+                    base_date = datetime.fromisoformat(current_due)
+                except ValueError:
+                    base_date = datetime.now(timezone.utc)
+            else:
+                base_date = datetime.now(timezone.utc)
+
+            new_due_date = base_date + timedelta(days=int(interval))
+
+            transaction.update(task_ref, {
+                'status': 'pending',
+                'due_date': new_due_date,
+                'completed_at': firestore.SERVER_TIMESTAMP,
+                'points_awarded': True,
+            })
+        else:
+            # Non-recurring: mark as completed permanently
+            transaction.update(task_ref, {
+                'status': 'completed',
+                'completed_at': firestore.SERVER_TIMESTAMP,
+                'points_awarded': True,
+            })
+
+        # Award points regardless of recurring or not
         if points_to_award > 0:
             user_ref = db.collection('users').document(uid)
             transaction.update(user_ref, {
                 'points': firestore.Increment(points_to_award)
             })
 
-        return points_to_award
+        return points_to_award, is_recurring
 
     try:
         transaction = db.transaction()
-        points_awarded = update_task_and_award_points(transaction)
+        points_awarded, is_recurring = update_task_and_award_points(transaction)
         return Response({
-            'detail': 'Task marked as completed.',
+            'detail': 'Task completed.' if not is_recurring else 'Task completed and reset for next cycle.',
             'points_awarded': points_awarded,
+            'is_recurring': is_recurring,
         }, status=200)
     except ValueError as e:
         if 'already completed' in str(e):
             return Response({'detail': 'Task is already completed.'}, status=400)
-        else:
-            return Response({'detail': str(e)}, status=400)
+        return Response({'detail': str(e)}, status=400)

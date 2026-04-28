@@ -8,6 +8,8 @@ export interface Task {
   status: 'pending' | 'completed';
   created_at: string;
   points: number;
+  is_recurring: boolean;
+  recurrence_interval_days: number | null;
 }
 
 export interface CreateTaskPayload {
@@ -16,4 +18,6 @@ export interface CreateTaskPayload {
   due_date: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   points: number;
+  is_recurring: boolean;
+  recurrence_interval_days: number | null;
 }

@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
+import { finalize, take } from 'rxjs/operators';
 import { HouseholdService } from '../../services/household.service';
 import { TaskService } from '../../services/task';
 import { CreateTaskComponent } from '../create-task/create-task';
@@ -42,6 +43,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: any = null;
   currentUserPoints = 0;
   currentUserName: string | null = null;
+
+  processingTaskIds = new Set<string>();
 
   private authUnsubscribe: (() => void) | null = null;
   private pointsUnsubscribe: (() => void) | null = null;
@@ -127,9 +130,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   completeTask(taskId: string) {
-    this.taskService.completeTask(taskId).subscribe({
-      error: (err: Error) => alert(err.message),
+    this.processingTaskIds.add(taskId);
+
+    this.tasks$.pipe(take(1)).subscribe((tasks) => {
+      const taskToComplete = tasks.find((t) => t.id === taskId);
+      const currentDueDate = taskToComplete?.due_date || '';
+
+      this.taskService
+        .completeTask(taskId, currentDueDate)
+        .pipe(
+          finalize(() => {
+            this.processingTaskIds.delete(taskId);
+            this.cdr.detectChanges();
+          }),
+        )
+        .subscribe({
+          next: () => {},
+          error: (err: Error) => {
+            alert(err.message);
+          },
+        });
     });
+  }
+
+  isTooEarly(dueDateStr: string | null, intervalDays: number | null | undefined): boolean {
+    if (!dueDateStr || !intervalDays) return false;
+
+    const currentDueDate = new Date(dueDateStr);
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+    currentDueDate.setHours(0, 0, 0, 0);
+
+    if (intervalDays === 1) {
+      return currentDueDate.getTime() > today.getTime();
+    }
+
+    const cycleStartDate = new Date(currentDueDate);
+    cycleStartDate.setDate(currentDueDate.getDate() - intervalDays);
+
+    return today.getTime() < cycleStartDate.getTime();
   }
 
   getDifficultyClass(difficulty: string): string {

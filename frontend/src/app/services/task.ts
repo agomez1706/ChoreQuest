@@ -29,16 +29,25 @@ export class TaskService {
     );
   }
 
-  completeTask(taskId: string): Observable<{ detail: string }> {
-    return this.http.post<{ detail: string }>(`${API_BASE}/${taskId}/complete/`, {}).pipe(
-      tap(() => {
-        const updated = this._tasks$
-          .getValue()
-          .map((t) => (t.id === taskId ? { ...t, status: 'completed' as const } : t));
-        this._tasks$.next(updated);
-      }),
-      catchError(this.handleError),
-    );
+  completeTask(
+    taskId: string,
+    currentDueDate: string,
+  ): Observable<{ detail: string; points_awarded: number; is_recurring: boolean; task: Task }> {
+    return this.http
+      .post<{
+        detail: string;
+        points_awarded: number;
+        is_recurring: boolean;
+        task: Task;
+      }>(`${API_BASE}/${taskId}/complete/`, { due_date: currentDueDate })
+      .pipe(
+        tap((response) => {
+          const currentTasks = this._tasks$.getValue();
+          const updatedTasks = currentTasks.map((t) => (t.id === taskId ? response.task : t));
+          this._tasks$.next(updatedTasks);
+        }),
+        catchError(this.handleError),
+      );
   }
 
   clearTasks(): void {

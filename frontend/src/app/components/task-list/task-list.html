@@ -37,52 +37,76 @@
             <input
               type="checkbox"
               (change)="onComplete(task.id)"
-              [checked]="task.status === 'completed'"
+              [checked]="task.status === 'completed' || isCooldown(task)"
               [disabled]="
-                !currentUserUid || task.status === 'completed' || !isAssignedToMe(task.assigned_to)
-              "
-              [attr.aria-label]="
-                'Task status for ' +
-                task.title +
-                ': ' +
-                (task.status === 'completed' ? 'completed' : 'not completed')
+                !currentUserUid ||
+                task.status === 'completed' ||
+                !isAssignedToMe(task.assigned_to) ||
+                processingTaskIds.has(task.id) ||
+                isCooldown(task) ||
+                isFutureLocked(task)
               "
             />
           </div>
 
-          <!-- Task details -->
           <div class="task-details">
-            <h4 [class.strike]="task.status === 'completed'">{{ task.title }}</h4>
-            <p class="task-meta">{{ formatDueDate(task.due_date) }}</p>
+            <h4 [class.strike]="task.status === 'completed' || isCooldown(task)">
+              {{ task.title }}
+            </h4>
+
+            <p class="task-meta">{{ formatDueDate(getDisplayDueDate(task)) }}</p>
 
             @if (task.status !== 'completed') {
               <div class="task-tags">
-                @if (getUrgency(task.due_date, task.status) === 'Due today') {
-                  <span class="tag tag--warning">Due today</span>
+                @if (!isCooldown(task)) {
+                  @if (getUrgency(getDisplayDueDate(task), task.status) === 'Due today') {
+                    <span class="tag tag--warning">Due today</span>
+                  }
+                  @if (getUrgency(getDisplayDueDate(task), task.status) === 'OVERDUE') {
+                    <span class="tag tag--danger">OVERDUE</span>
+                  }
                 }
-                @if (getUrgency(task.due_date, task.status) === 'OVERDUE') {
-                  <span class="tag tag--danger">OVERDUE</span>
-                }
+
                 <span class="tag tag--neutral">{{ task.difficulty }}</span>
                 @if (task.points > 0) {
                   <span class="tag tag--points">+{{ task.points }} pts</span>
                 }
+                @if (task.is_recurring && task.recurrence_interval_days) {
+                  <span class="tag tag--recurring">
+                    🔁
+                    {{
+                      task.recurrence_interval_days === 1
+                        ? 'Daily'
+                        : 'Every ' + task.recurrence_interval_days + ' days'
+                    }}
+                  </span>
+                }
               </div>
-            } @else {
-              @if (task.points > 0) {
-                <div class="task-tags">
-                  <span class="tag tag--points-earned">+{{ task.points }} pts earned</span>
-                </div>
-              }
             }
           </div>
 
-          <!-- Actions -->
           <div class="task-actions">
             @if (task.status === 'completed') {
               <button class="btn-complete" disabled>Done</button>
             } @else if (isAssignedToMe(task.assigned_to)) {
-              <button class="btn-complete" (click)="onComplete(task.id)">Complete</button>
+              <button
+                class="btn-complete"
+                [class.btn-complete--locked]="isCooldown(task) || isFutureLocked(task)"
+                [disabled]="
+                  processingTaskIds.has(task.id) || isCooldown(task) || isFutureLocked(task)
+                "
+                (click)="onComplete(task.id)"
+              >
+                {{
+                  processingTaskIds.has(task.id)
+                    ? 'Completing...'
+                    : isCooldown(task)
+                      ? 'Done'
+                      : isFutureLocked(task)
+                        ? 'Not Due Yet'
+                        : 'Complete'
+                }}
+              </button>
             } @else {
               <button class="btn-complete btn-complete--locked" disabled>Locked</button>
             }

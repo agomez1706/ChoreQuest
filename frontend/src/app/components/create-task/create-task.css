@@ -1,6 +1,3 @@
-/* =========================================
-   STRUCTURAL & MODAL LAYOUT
-========================================= */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -54,6 +51,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
+  max-height: 75vh;
+  overflow-y: auto;
 }
 
 .error-banner {
@@ -71,7 +70,8 @@
   gap: 0.3rem;
 }
 
-.form-group label {
+.form-group label,
+.form-group-label {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--gray-700);
@@ -303,6 +303,60 @@
   .hard-toggle.mat-button-toggle-checked
   .mat-pseudo-checkbox::after {
   border-color: var(--red-500) !important;
+}
+
+/* =========================================
+   RECURRING TASK SECTION
+========================================= */
+.recurring-group {
+  border: 1px solid var(--gray-200);
+  border-radius: 0.6rem;
+  padding: 0.875rem 1rem;
+  background: #fafafa;
+  gap: 0.625rem;
+}
+
+.recurring-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.recurring-label-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* Match slide toggle track/handle to indigo theme */
+::ng-deep .recurring-group .mdc-switch--selected .mdc-switch__track {
+  background-color: var(--indigo-600) !important;
+}
+::ng-deep .recurring-group .mdc-switch--selected .mdc-switch__handle::after {
+  background-color: white !important;
+}
+::ng-deep .recurring-group .mdc-switch--selected .mdc-switch__icon {
+  fill: var(--indigo-600) !important;
+}
+
+.recurrence-interval-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+}
+
+.recurring-interval-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  white-space: nowrap;
+}
+
+.interval-field {
+  width: 80px !important;
+  flex-shrink: 0;
 }
 
 /* =========================================

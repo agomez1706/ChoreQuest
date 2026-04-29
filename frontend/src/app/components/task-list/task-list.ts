@@ -16,12 +16,40 @@ export class TaskListComponent {
   @Input() currentUserUid: string = '';
   @Input() isAdmin: boolean = false;
   @Input() tasksLoadError: string = '';
+  @Input() processingTaskIds: Set<string> = new Set<string>();
 
   @Output() completeTask = new EventEmitter<string>();
   @Output() openCreateTask = new EventEmitter<void>();
 
   isAssignedToMe(assignedTo: string): boolean {
     return assignedTo === this.currentUserUid;
+  }
+
+  isTooEarly(dueDateStr: string | null, intervalDays: number | null | undefined): boolean {
+    if (!dueDateStr || !intervalDays) return false;
+
+    const currentDueDate = new Date(dueDateStr);
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+    currentDueDate.setHours(0, 0, 0, 0);
+
+    if (intervalDays === 1) {
+      return currentDueDate.getTime() > today.getTime();
+    }
+
+    const cycleStartDate = new Date(currentDueDate);
+    cycleStartDate.setDate(currentDueDate.getDate() - intervalDays);
+
+    return today.getTime() < cycleStartDate.getTime();
+  }
+
+  isCooldown(task: any): boolean {
+    return this.isTooEarly(task.due_date, task.recurrence_interval_days) && !!task.completed_at;
+  }
+
+  isFutureLocked(task: any): boolean {
+    return this.isTooEarly(task.due_date, task.recurrence_interval_days) && !task.completed_at;
   }
 
   getMemberName(uid: string): string {
@@ -46,6 +74,18 @@ export class TaskListComponent {
     if (diff === 0) return 'Today';
     if (diff === 1) return 'Tomorrow';
     return due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  getDisplayDueDate(task: any): string | null {
+    if (!task.due_date) return null;
+
+    if (this.isCooldown(task) && task.recurrence_interval_days) {
+      const displayDate = new Date(task.due_date);
+      displayDate.setDate(displayDate.getDate() - task.recurrence_interval_days);
+      return displayDate.toISOString();
+    }
+
+    return task.due_date;
   }
 
   getUrgency(dueDateStr: string | null, status: string): string {

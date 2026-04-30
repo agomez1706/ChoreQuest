@@ -7,10 +7,12 @@ import {
   HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
-import { finalize, take } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { finalize, map, take } from 'rxjs/operators';
 import { HouseholdService } from '../../services/household.service';
 import { TaskService } from '../../services/task';
 import { CreateTaskComponent } from '../create-task/create-task';
@@ -20,7 +22,7 @@ import { TaskListComponent } from '../task-list/task-list';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, CreateTaskComponent, TaskListComponent],
+  imports: [CommonModule, RouterModule, FormsModule, CreateTaskComponent, TaskListComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
@@ -33,7 +35,87 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   household$ = this.householdService.household$;
-  tasks$ = this.taskService.tasks$;
+
+  filterState = {
+    status: 'All',
+    assignee: 'All',
+    difficulty: 'All',
+    pointsMin: null as number | null,
+    pointsMax: null as number | null,
+    recurring: 'All',
+    sortBy: 'dueDate',
+    sortDir: 'asc',
+  };
+
+  private filters$ = new BehaviorSubject(this.filterState);
+
+  // Master list of tasks for the Header Badge and Background logic
+  allTasks$ = this.taskService.tasks$;
+
+  // Filtered and Sorted list for the UI Display
+  filteredTasks$ = combineLatest([this.taskService.tasks$, this.filters$]).pipe(
+    map(([tasks, filters]) => {
+      let filtered = tasks.filter((task) => {
+        if (filters.status !== 'All') {
+          const isCompleted = task.status === 'completed';
+          let isOverdue = false;
+
+          if (!isCompleted && task.due_date) {
+            const due = new Date(task.due_date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            due.setHours(0, 0, 0, 0);
+            isOverdue = due.getTime() < today.getTime();
+          }
+
+          if (filters.status === 'Completed' && !isCompleted) return false;
+          if (filters.status === 'Overdue' && !isOverdue) return false;
+          // "Pending" means it is incomplete, but NOT overdue yet
+          if (filters.status === 'Pending' && (isCompleted || isOverdue)) return false;
+        }
+        if (filters.assignee !== 'All' && task.assigned_to !== filters.assignee) return false;
+        if (filters.difficulty !== 'All' && task.difficulty !== filters.difficulty) return false;
+        if (filters.recurring === 'Yes' && !task.is_recurring) return false;
+        if (filters.recurring === 'No' && task.is_recurring) return false;
+
+        if (filters.pointsMin !== null && task.points < filters.pointsMin) return false;
+        if (filters.pointsMax !== null && task.points > filters.pointsMax) {
+          if (filters.pointsMin === null || filters.pointsMax >= filters.pointsMin) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      return filtered.sort((a, b) => {
+        let comparison = 0;
+
+        if (filters.sortBy === 'points') {
+          comparison = a.points - b.points;
+        } else if (filters.sortBy === 'difficulty') {
+          const diffMap: any = { Easy: 1, Medium: 2, Hard: 3 };
+          comparison = (diffMap[a.difficulty] || 0) - (diffMap[b.difficulty] || 0);
+        } else if (filters.sortBy === 'dueDate') {
+          const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+          const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+          comparison = dateA - dateB;
+        }
+
+        if (filters.sortDir === 'desc') {
+          comparison = comparison * -1;
+        }
+
+        if (comparison === 0 && filters.sortBy !== 'dueDate') {
+          const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+          const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+          comparison = dateA - dateB;
+        }
+
+        return comparison;
+      });
+    }),
+  );
 
   isProfileMenuOpen = false;
   isInitialLoading = true;
@@ -48,6 +130,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private authUnsubscribe: (() => void) | null = null;
   private pointsUnsubscribe: (() => void) | null = null;
+
+  onFilterChange() {
+    this.filters$.next(this.filterState);
+  }
 
   toggleProfileMenu() {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
@@ -105,7 +191,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToUserPoints(uid: string) {
-    // Unsubscribe from any previous listener first
     if (this.pointsUnsubscribe) {
       this.pointsUnsubscribe();
     }
@@ -132,7 +217,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   completeTask(taskId: string) {
     this.processingTaskIds.add(taskId);
 
-    this.tasks$.pipe(take(1)).subscribe((tasks) => {
+    // FIX: Changed from tasks$ to allTasks$ to guarantee the task is found even if filtered out
+    this.allTasks$.pipe(take(1)).subscribe((tasks) => {
       const taskToComplete = tasks.find((t) => t.id === taskId);
       const currentDueDate = taskToComplete?.due_date || '';
 
@@ -222,7 +308,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Subscribe to live point updates for this user
       this.subscribeToUserPoints(user.uid);
 
       this.householdService.loadMyHousehold().subscribe({

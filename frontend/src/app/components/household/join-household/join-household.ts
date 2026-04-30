@@ -1,4 +1,12 @@
-import { Component, inject, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  ChangeDetectorRef,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+} from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -8,7 +16,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { HouseholdService } from '../../../services/household.service';
+import { HouseholdService } from '../../../services/household';
 
 /**
  * Custom validator to ensure the code is exactly 6 alphanumeric characters.

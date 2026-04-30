@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { Household, CreateHouseholdPayload, JoinHouseholdPayload } from '../models/household.model';
+import { Household, CreateHouseholdPayload, JoinHouseholdPayload } from '../models/household';
 
 const API_BASE = '/api/household';
 

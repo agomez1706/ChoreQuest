@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
-import { HouseholdService } from '../../services/household.service';
+import { HouseholdService } from '../../services/household';
 import { Subscription } from 'rxjs';
 
 @Component({

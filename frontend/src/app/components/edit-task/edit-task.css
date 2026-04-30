@@ -1,0 +1,423 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #1f2937;
+}
+
+.modal-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.error-banner {
+  background: var(--red-100);
+  color: #b91c1c;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.875rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.form-group label,
+.form-group-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  letter-spacing: 0.02em;
+}
+
+.field-error-text {
+  color: #b91c1c;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.form-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--gray-400);
+}
+
+/* =========================================
+   MATERIAL FORM FIELDS & INPUTS
+========================================= */
+.material-field {
+  width: 100%;
+}
+
+::ng-deep .material-field .mat-mdc-form-field-subscript-wrapper {
+  display: none !important;
+}
+
+::ng-deep .no-floating-label .mdc-notched-outline__notch {
+  border-right: none !important;
+}
+
+::ng-deep .material-field .mat-mdc-text-field-wrapper {
+  background: #fff;
+  border-radius: 0.5rem;
+}
+
+::ng-deep .mdc-text-field {
+  padding: 0px 8px !important;
+}
+
+::ng-deep .material-field .mat-mdc-form-field-infix {
+  padding: 0.6rem 0.5rem !important;
+  min-height: auto !important;
+}
+
+::ng-deep .material-field .mdc-notched-outline__leading,
+::ng-deep .material-field .mdc-notched-outline__notch,
+::ng-deep .material-field .mdc-notched-outline__trailing {
+  border-color: var(--gray-300) !important;
+}
+
+::ng-deep .material-field.mat-focused .mdc-notched-outline__leading,
+::ng-deep .material-field.mat-focused .mdc-notched-outline__notch,
+::ng-deep .material-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--indigo-600) !important;
+}
+
+::ng-deep .material-field .mat-mdc-input-element,
+::ng-deep .material-field .mat-mdc-select-value {
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+::ng-deep .material-field .mat-mdc-select-arrow,
+::ng-deep .material-field .mat-datepicker-toggle-default-icon {
+  color: var(--gray-500);
+}
+
+::ng-deep .material-field .mat-mdc-input-element::placeholder,
+::ng-deep .material-field .mat-mdc-select-placeholder {
+  color: var(--gray-400) !important;
+  -webkit-text-fill-color: var(--gray-400) !important;
+  font-weight: 400 !important;
+  opacity: 1 !important;
+}
+
+/* =========================================
+   POINTS FIELD CUSTOMIZATION
+========================================= */
+.points-prefix {
+  font-size: 1rem;
+  line-height: 1;
+  margin-left: 0.375rem;
+}
+
+.points-suffix {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  font-weight: 600;
+  margin: 0 0.375rem;
+}
+
+::ng-deep .points-field input[type='number'] {
+  appearance: textfield;
+}
+
+::ng-deep .points-field input[type='number']::-webkit-inner-spin-button,
+::ng-deep .points-field input[type='number']::-webkit-outer-spin-button {
+  display: none;
+}
+
+/* =========================================
+   MATERIAL OVERLAYS (DROPDOWN & CALENDAR)
+========================================= */
+::ng-deep .custom-select-panel {
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 4px !important;
+  background-color: white !important;
+}
+
+::ng-deep .mat-datepicker-content {
+  background-color: #ffffff !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid var(--gray-200) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+::ng-deep .cdk-overlay-pane {
+  z-index: 9999 !important;
+  padding: 0 !important;
+}
+
+::ng-deep .mat-calendar {
+  color: var(--gray-700) !important;
+  background-color: #ffffff !important;
+  height: fit-content !important;
+}
+
+::ng-deep .mat-calendar-body-selected {
+  background-color: var(--indigo-600) !important;
+  color: white !important;
+}
+
+::ng-deep .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+  border-color: var(--indigo-600) !important;
+}
+
+::ng-deep
+  .mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover
+  > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+  background-color: rgba(79, 70, 229, 0.1) !important;
+}
+
+::ng-deep .mat-calendar-period-button {
+  color: var(--gray-700) !important;
+  font-weight: 700 !important;
+}
+
+/* =========================================
+   DIFFICULTY TOGGLE BUTTONS
+========================================= */
+.difficulty-toggle-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+::ng-deep .mat-button-toggle-group {
+  border: 0 !important;
+}
+
+::ng-deep .difficulty-toggle-group .mat-button-toggle {
+  border: none !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden;
+  background: #f9fafb !important;
+}
+
+::ng-deep .difficulty-toggle-group .mat-button-toggle-label-content {
+  line-height: 2.25rem;
+  padding: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+::ng-deep .difficulty-toggle-group .mat-button-toggle-checked.easy-toggle {
+  background: var(--emerald-100) !important;
+}
+::ng-deep .difficulty-toggle-group .mat-button-toggle-checked.medium-toggle {
+  background: #fef3c7 !important;
+}
+::ng-deep .difficulty-toggle-group .mat-button-toggle-checked.hard-toggle {
+  background: var(--red-100) !important;
+}
+
+::ng-deep
+  .difficulty-toggle-group
+  .mat-button-toggle-checked.easy-toggle
+  .mat-button-toggle-label-content {
+  color: #065f46 !important;
+}
+::ng-deep
+  .difficulty-toggle-group
+  .mat-button-toggle-checked.medium-toggle
+  .mat-button-toggle-label-content {
+  color: #92400e !important;
+}
+::ng-deep
+  .difficulty-toggle-group
+  .mat-button-toggle-checked.hard-toggle
+  .mat-button-toggle-label-content {
+  color: #b91c1c !important;
+}
+
+::ng-deep
+  .difficulty-toggle-group
+  .easy-toggle.mat-button-toggle-checked
+  .mat-pseudo-checkbox::after {
+  border-color: var(--emerald-500) !important;
+}
+::ng-deep
+  .difficulty-toggle-group
+  .medium-toggle.mat-button-toggle-checked
+  .mat-pseudo-checkbox::after {
+  border-color: #f59e0b !important;
+}
+::ng-deep
+  .difficulty-toggle-group
+  .hard-toggle.mat-button-toggle-checked
+  .mat-pseudo-checkbox::after {
+  border-color: var(--red-500) !important;
+}
+
+/* =========================================
+   RECURRING TASK SECTION
+========================================= */
+.recurring-group {
+  border: 1px solid var(--gray-200);
+  border-radius: 0.6rem;
+  padding: 0.875rem 1rem;
+  background: #fafafa;
+  gap: 0.625rem;
+}
+
+.recurring-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.recurring-label-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+::ng-deep .recurring-group .mdc-switch--selected .mdc-switch__track {
+  background-color: var(--indigo-600) !important;
+}
+::ng-deep .recurring-group .mdc-switch--selected .mdc-switch__handle::after {
+  background-color: white !important;
+}
+::ng-deep .recurring-group .mdc-switch--selected .mdc-switch__icon {
+  fill: var(--indigo-600) !important;
+}
+
+.recurrence-interval-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+}
+
+.recurring-interval-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  white-space: nowrap;
+}
+
+.interval-field {
+  width: 80px !important;
+  flex-shrink: 0;
+}
+
+/* =========================================
+   FOOTER & BUTTONS
+========================================= */
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--gray-200);
+}
+
+.footer-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s;
+}
+
+.btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--indigo-600);
+  color: white;
+}
+
+.btn--primary:disabled {
+  background: #a5a1f6;
+  color: #f5f3ff;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: var(--gray-100);
+}
+
+.btn--danger {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #fef2f2;
+}

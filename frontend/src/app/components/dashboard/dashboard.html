@@ -218,6 +218,7 @@
           [processingTaskIds]="processingTaskIds"
           (completeTask)="completeTask($event)"
           (openCreateTask)="openCreateTask()"
+          (editTask)="openEditTask($event)"
         />
       } @else {
         <div class="empty-state card">
@@ -253,6 +254,16 @@
         [members]="getMembers(household)"
         (closed)="closeCreateTask()"
         (taskCreated)="onTaskCreated()"
+      />
+    }
+  }
+
+  @if (isEditTaskOpen && taskToEdit) {
+    @if (household$ | async; as household) {
+      <app-edit-task
+        [task]="taskToEdit"
+        [members]="getMembers(household)"
+        (closed)="closeEditTask()"
       />
     }
   }

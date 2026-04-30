@@ -3,11 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { Auth, user } from '@angular/fire/auth';
-import { Firestore, doc, updateDoc, writeBatch, deleteDoc, collection, query, where, getDocs } from '@angular/fire/firestore';
+import {
+  Firestore,
+  doc,
+  updateDoc,
+  writeBatch,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
-import { HouseholdService } from '../../services/household.service';
+import { HouseholdService } from '../../services/household';
 import { TaskService } from '../../services/task';
-import { Household } from '../../models/household.model';
+import { Household } from '../../models/household';
 
 @Component({
   selector: 'app-household-settings',
@@ -147,7 +157,7 @@ export class HouseholdSettingsComponent implements OnInit, OnDestroy {
 
       const tasksQuery = query(
         collection(this.firestore, `households/${this.household.id}/tasks`),
-        where('assigned_to', '==', this.currentUserUid)
+        where('assigned_to', '==', this.currentUserUid),
       );
       const taskSnaps = await getDocs(tasksQuery);
       taskSnaps.forEach((docSnap) => {
@@ -257,7 +267,7 @@ export class HouseholdSettingsComponent implements OnInit, OnDestroy {
 
           const tasksQuery = query(
             collection(this.firestore, `households/${this.household!.id}/tasks`),
-            where('assigned_to', '==', this.currentUserUid)
+            where('assigned_to', '==', this.currentUserUid),
           );
           const taskSnaps = await getDocs(tasksQuery);
           taskSnaps.forEach((docSnap) => {
@@ -351,7 +361,7 @@ export class HouseholdSettingsComponent implements OnInit, OnDestroy {
 
       const tasksQuery = query(
         collection(this.firestore, `households/${this.household.id}/tasks`),
-        where('assigned_to', '==', memberId)
+        where('assigned_to', '==', memberId),
       );
       const taskSnaps = await getDocs(tasksQuery);
       taskSnaps.forEach((docSnap) => {

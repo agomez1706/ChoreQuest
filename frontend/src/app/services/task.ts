@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { Task, CreateTaskPayload } from '../models/task.model';
+import { Task, CreateTaskPayload } from '../models/task';
 
 const API_BASE = '/api/tasks';
 
@@ -48,6 +48,28 @@ export class TaskService {
         }),
         catchError(this.handleError),
       );
+  }
+
+  updateTask(taskId: string, payload: Partial<Task>): Observable<Task> {
+    return this.http.patch<Task>(`${API_BASE}/${taskId}/update/`, payload).pipe(
+      tap((updatedTask) => {
+        const currentTasks = this._tasks$.getValue();
+        const updatedTasksList = currentTasks.map((t) => (t.id === taskId ? updatedTask : t));
+        this._tasks$.next(updatedTasksList);
+      }),
+      catchError(this.handleError),
+    );
+  }
+
+  deleteTask(taskId: string): Observable<void> {
+    return this.http.delete<void>(`${API_BASE}/${taskId}/delete/`).pipe(
+      tap(() => {
+        const currentTasks = this._tasks$.getValue();
+        const updatedTasksList = currentTasks.filter((t) => t.id !== taskId);
+        this._tasks$.next(updatedTasksList);
+      }),
+      catchError(this.handleError),
+    );
   }
 
   clearTasks(): void {

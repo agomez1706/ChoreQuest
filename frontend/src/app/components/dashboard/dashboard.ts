@@ -11,16 +11,18 @@ import { Router, RouterModule } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
 import { finalize, take } from 'rxjs/operators';
-import { HouseholdService } from '../../services/household.service';
+import { HouseholdService } from '../../services/household';
 import { TaskService } from '../../services/task';
 import { CreateTaskComponent } from '../create-task/create-task';
-import { Household, HouseholdMember } from '../../models/household.model';
 import { TaskListComponent } from '../task-list/task-list';
+import { Household, HouseholdMember } from '../../models/household';
+import { Task } from '../../models/task';
+import { EditTaskComponent } from '../edit-task/edit-task';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, CreateTaskComponent, TaskListComponent],
+  imports: [CommonModule, RouterModule, CreateTaskComponent, TaskListComponent, EditTaskComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
@@ -39,6 +41,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isInitialLoading = true;
   isCreateTaskOpen = false;
   tasksLoadError = '';
+
+  // NEW: State for Edit Task Modal
+  isEditTaskOpen = false;
+  taskToEdit: Task | null = null;
 
   currentUser: any = null;
   currentUserPoints = 0;
@@ -90,6 +96,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.reloadHouseholdTasks();
   }
 
+  // NEW: Edit Task methods
+  openEditTask(task: Task) {
+    this.taskToEdit = task;
+    this.isEditTaskOpen = true;
+  }
+
+  closeEditTask() {
+    this.isEditTaskOpen = false;
+    this.taskToEdit = null;
+  }
+
   private reloadHouseholdTasks() {
     this.tasksLoadError = '';
     this.taskService.loadHouseholdTasks().subscribe({
@@ -105,7 +122,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToUserPoints(uid: string) {
-    // Unsubscribe from any previous listener first
     if (this.pointsUnsubscribe) {
       this.pointsUnsubscribe();
     }
@@ -153,66 +169,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  isTooEarly(dueDateStr: string | null, intervalDays: number | null | undefined): boolean {
-    if (!dueDateStr || !intervalDays) return false;
-
-    const currentDueDate = new Date(dueDateStr);
-    const today = new Date();
-
-    today.setHours(0, 0, 0, 0);
-    currentDueDate.setHours(0, 0, 0, 0);
-
-    if (intervalDays === 1) {
-      return currentDueDate.getTime() > today.getTime();
-    }
-
-    const cycleStartDate = new Date(currentDueDate);
-    cycleStartDate.setDate(currentDueDate.getDate() - intervalDays);
-
-    return today.getTime() < cycleStartDate.getTime();
-  }
-
-  getDifficultyClass(difficulty: string): string {
-    switch (difficulty) {
-      case 'Easy':
-        return 'tag--easy';
-      case 'Medium':
-        return 'tag--warning';
-      case 'Hard':
-        return 'tag--danger';
-      default:
-        return 'tag--neutral';
-    }
-  }
-
-  formatDueDate(dueDateStr: string | null): string {
-    if (!dueDateStr) return 'No due date';
-    const due = new Date(dueDateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    due.setHours(0, 0, 0, 0);
-    const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-
-    if (diff < 0)
-      return `Was due: ${due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-    if (diff === 0) return 'Today';
-    if (diff === 1) return 'Tomorrow';
-    return due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  getUrgency(dueDateStr: string | null, status: string): string {
-    if (status === 'completed') return '';
-    if (!dueDateStr) return '';
-    const due = new Date(dueDateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    due.setHours(0, 0, 0, 0);
-    const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-    if (diff < 0) return 'OVERDUE';
-    if (diff === 0) return 'Due today';
-    return '';
-  }
-
   ngOnInit() {
     this.authUnsubscribe = this.auth.onAuthStateChanged((user) => {
       this.currentUser = user;
@@ -222,7 +178,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Subscribe to live point updates for this user
       this.subscribeToUserPoints(user.uid);
 
       this.householdService.loadMyHousehold().subscribe({

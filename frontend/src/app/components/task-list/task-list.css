@@ -84,7 +84,7 @@
   grid-row: 1;
   display: flex;
   align-items: flex-start;
-  padding-top: 0.15rem;
+  padding-top: 0.15rem; /* Perfectly aligns checkbox with the title text */
 }
 
 /* Column 2: Details */
@@ -174,21 +174,63 @@
   letter-spacing: 0.01em;
 }
 
-/* Mobile Actions Row */
+/* =========================================
+   ASSIGNEE BADGE (LEFT SIDE)
+========================================= */
+.assignee-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.25rem;
+  background: var(--gray-50, #f9fafb);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 2rem;
+  width: fit-content;
+}
+
+.assignee-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--indigo-100, #e0e7ff);
+  color: var(--indigo-700, #4338ca);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.assignee-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-600, #4b5563);
+}
+
+/* =========================================
+   THE ACTION PILL DOCK (MOBILE FIRST)
+========================================= */
 .task-actions {
   grid-column: 1 / -1;
   grid-row: 2;
+  justify-self: flex-end; /* Pushes the dock to the right on mobile */
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
   align-items: center;
-  border-top: 1px solid var(--gray-100);
-  padding-top: 0.75rem;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+
+  /* Dock Styling */
+  background: var(--gray-50, #f8fafc);
+  border: 1px solid var(--gray-200, #e2e8f0);
+  padding: 0.35rem 0.35rem 0.35rem 0.75rem;
+  border-radius: 999px; /* Pill shape */
 }
 
 .btn-complete {
   padding: 0.4rem 1.25rem;
-  border-radius: 0.4rem;
+  border-radius: 999px; /* perfectly matches the pill dock */
   border: none;
   background: #16a34a;
   color: #fff;
@@ -196,6 +238,7 @@
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
+  margin: 0;
 }
 
 .btn-complete:hover:not(:disabled) {
@@ -212,12 +255,42 @@
   color: var(--gray-400);
 }
 
-.assignee {
-  font-size: 0.6875rem;
-  color: var(--gray-500);
-  font-weight: 600;
+/* =========================================
+   EDIT BUTTON (INSIDE THE DOCK)
+========================================= */
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--gray-400, #9ca3af);
+  width: 2rem;
+  height: 2rem; /* Fixed width/height so hover makes a perfect circle */
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  padding: 0;
 }
 
+.btn-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background-color: var(--gray-200, #e5e7eb); /* Slightly darker gray for dock hover */
+  color: var(--indigo-600, #4f46e5);
+}
+
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   UTILITIES
+========================================= */
 .empty-tasks {
   text-align: center;
   padding: 2rem 1rem;
@@ -239,7 +312,6 @@
 }
 
 /* ── Responsive Desktop Overrides ─────────────────────────────── */
-
 @media (min-width: 641px) {
   .section-header {
     padding-left: 1.25rem;
@@ -253,8 +325,8 @@
   }
 
   .task-checkbox {
-    align-items: center;
     padding-top: 0;
+    align-items: center;
   }
 
   .task-details h4 {
@@ -267,11 +339,7 @@
   .task-actions {
     grid-column: 3;
     grid-row: 1;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 0.5rem;
-    border-top: none;
-    padding-top: 0;
+    justify-self: auto;
+    margin-top: 0;
   }
 }

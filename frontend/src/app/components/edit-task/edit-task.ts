@@ -1,9 +1,17 @@
-import { Component, inject, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../services/task';
 import { HouseholdMember } from '../../models/household';
-import { CreateTaskPayload } from '../../models/task';
+import { Task } from '../../models/task';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +21,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { provideNativeDateAdapter } from '@angular/material/core';
 
 @Component({
-  selector: 'app-create-task',
+  selector: 'app-edit-task',
   standalone: true,
   imports: [
     CommonModule,
@@ -26,15 +34,18 @@ import { provideNativeDateAdapter } from '@angular/material/core';
     MatSlideToggleModule,
   ],
   providers: [provideNativeDateAdapter()],
-  templateUrl: './create-task.html',
-  styleUrls: ['./create-task.css'],
+  templateUrl: './edit-task.html',
+  styleUrls: ['./edit-task.css'],
 })
-export class CreateTaskComponent implements OnInit {
+export class EditTaskComponent implements OnInit {
   private taskService = inject(TaskService);
+  private cdr = inject(ChangeDetectorRef);
 
+  @Input() task!: Task;
   @Input() members: HouseholdMember[] = [];
+
   @Output() closed = new EventEmitter<void>();
-  @Output() taskCreated = new EventEmitter<void>();
+  @Output() taskUpdated = new EventEmitter<void>();
 
   title = '';
   assigned_to: string | null = '';
@@ -45,11 +56,28 @@ export class CreateTaskComponent implements OnInit {
   recurrence_interval_days: number | null = 7;
 
   isSubmitting = false;
+  isDeleting = false;
   errorMessage = '';
   showValidationErrors = false;
 
   ngOnInit() {
-    this.due_date = new Date();
+    if (this.task) {
+      this.title = this.task.title;
+      this.assigned_to = this.task.assigned_to;
+      this.difficulty = this.task.difficulty as 'Easy' | 'Medium' | 'Hard';
+      this.points = this.task.points;
+      this.is_recurring = this.task.is_recurring;
+
+      this.recurrence_interval_days = this.task.recurrence_interval_days || 7;
+
+      if (this.task.due_date) {
+        const cleanDateStr = this.task.due_date.split('T')[0];
+        const [year, month, day] = cleanDateStr.split('-').map(Number);
+        this.due_date = new Date(year, month - 1, day);
+      } else {
+        this.due_date = new Date();
+      }
+    }
   }
 
   getLocalDateString(date: Date): string {
@@ -131,12 +159,37 @@ export class CreateTaskComponent implements OnInit {
     );
   }
 
+  deleteTask() {
+    if (this.isSubmitting || this.isDeleting) return;
+
+    if (!confirm('Are you sure you want to delete this task? This cannot be undone.')) {
+      return;
+    }
+
+    this.isDeleting = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.taskService.deleteTask(this.task.id).subscribe({
+      next: () => {
+        this.isDeleting = false;
+        alert(`Task "${this.task.title}" has been deleted.`);
+        this.close();
+      },
+      error: (err: Error) => {
+        this.isDeleting = false;
+        this.errorMessage = err.message || 'A network error occurred.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   submit() {
     if (!this.isFormValid) {
       this.showValidationErrors = true;
       return;
     }
-    if (this.isSubmitting) return;
+    if (this.isSubmitting || this.isDeleting) return;
 
     this.isSubmitting = true;
     this.errorMessage = '';
@@ -147,7 +200,7 @@ export class CreateTaskComponent implements OnInit {
     const difficulty = this.getNormalizedDifficulty()!;
     const points = this.getNormalizedPoints()!;
 
-    const payload: CreateTaskPayload = {
+    const payload: Partial<Task> = {
       title,
       assigned_to: assignedTo,
       due_date: dueDate,
@@ -157,15 +210,16 @@ export class CreateTaskComponent implements OnInit {
       recurrence_interval_days: this.is_recurring ? this.getNormalizedRecurrenceInterval() : null,
     };
 
-    this.taskService.createTask(payload).subscribe({
+    this.taskService.updateTask(this.task.id, payload).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.taskCreated.emit();
+        this.taskUpdated.emit();
         this.close();
       },
       error: (err: Error) => {
         this.isSubmitting = false;
         this.errorMessage = err.message;
+        this.cdr.detectChanges();
       },
     });
   }

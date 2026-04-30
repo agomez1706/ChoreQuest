@@ -13,7 +13,7 @@ export interface Household {
   admin_id: string;
   member_count: number;
   is_full: boolean;
-  members: HouseholdMember[]; // Updated: backend returns hydrated objects, not plain UIDs
+  members: HouseholdMember[];
   created_at?: string;
 }
 

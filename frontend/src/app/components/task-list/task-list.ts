@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Task } from '../../models/task.model';
-import { Household } from '../../models/household.model';
+import { Task } from '../../models/task';
+import { Household } from '../../models/household';
 
 @Component({
   selector: 'app-task-list',
@@ -20,6 +20,7 @@ export class TaskListComponent {
 
   @Output() completeTask = new EventEmitter<string>();
   @Output() openCreateTask = new EventEmitter<void>();
+  @Output() editTask = new EventEmitter<Task>();
 
   isAssignedToMe(assignedTo: string): boolean {
     return assignedTo === this.currentUserUid;
@@ -110,5 +111,9 @@ export class TaskListComponent {
 
   onOpenCreateTask(): void {
     this.openCreateTask.emit();
+  }
+
+  onEditTask(task: Task): void {
+    this.editTask.emit(task);
   }
 }

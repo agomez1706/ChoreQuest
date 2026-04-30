@@ -4,7 +4,7 @@
       <h1 class="logo-text">ChoreQuest</h1>
     </div>
     <div class="header-center">
-      @if (tasks$ | async; as tasks) {
+      @if (allTasks$ | async; as tasks) {
         @if (getMyPendingTaskCount(tasks) > 0) {
           <span class="badge badge--success">
             {{ getMyPendingTaskCount(tasks) }} task{{
@@ -92,8 +92,125 @@
           </div>
         </div>
 
+        <div class="filter-toolbar card">
+          <div class="filter-group">
+            <label>Status</label>
+            <select
+              class="filter-select"
+              [(ngModel)]="filterState.status"
+              (change)="onFilterChange()"
+            >
+              <option value="All">Any</option>
+              <option value="Pending">Pending (On Time)</option>
+              <option value="Overdue">Overdue ⚠️</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Assignee</label>
+            <select
+              class="filter-select"
+              [(ngModel)]="filterState.assignee"
+              (change)="onFilterChange()"
+            >
+              <option value="All">Everyone</option>
+              <option [value]="currentUser?.uid">Assigned to Me</option>
+              @for (member of household.members; track member.id) {
+                @if (member.id !== currentUser?.uid) {
+                  <option [value]="member.id">{{ member.display_name }}</option>
+                }
+              }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Difficulty</label>
+            <select
+              class="filter-select"
+              [(ngModel)]="filterState.difficulty"
+              (change)="onFilterChange()"
+            >
+              <option value="All">Any</option>
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+
+          <div class="filter-group points-range-group">
+            <label>Points Range</label>
+            <div class="range-inputs">
+              <input
+                type="number"
+                class="filter-input"
+                placeholder="Min"
+                [(ngModel)]="filterState.pointsMin"
+                (ngModelChange)="onFilterChange()"
+                min="0"
+              />
+              <span class="range-separator">-</span>
+              <input
+                type="number"
+                class="filter-input"
+                placeholder="Max"
+                [(ngModel)]="filterState.pointsMax"
+                (ngModelChange)="onFilterChange()"
+                min="0"
+              />
+            </div>
+            @if (
+              filterState.pointsMin !== null &&
+              filterState.pointsMax !== null &&
+              filterState.pointsMin > filterState.pointsMax
+            ) {
+              <span class="filter-error">Max must be ≥ Min</span>
+            }
+          </div>
+
+          <div class="filter-group">
+            <label>Recurring</label>
+            <select
+              class="filter-select"
+              [(ngModel)]="filterState.recurring"
+              (change)="onFilterChange()"
+            >
+              <option value="All">Any</option>
+              <option value="Yes">Recurring</option>
+              <option value="No">One-time</option>
+            </select>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="filter-group">
+            <label>Sort By</label>
+            <select
+              class="filter-select"
+              [(ngModel)]="filterState.sortBy"
+              (change)="onFilterChange()"
+            >
+              <option value="dueDate">Due Date</option>
+              <option value="difficulty">Difficulty</option>
+              <option value="points">Points</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Direction</label>
+            <select
+              class="filter-select"
+              [(ngModel)]="filterState.sortDir"
+              (change)="onFilterChange()"
+            >
+              <option value="asc">Ascending ⬆️</option>
+              <option value="desc">Descending ⬇️</option>
+            </select>
+          </div>
+        </div>
+
         <app-task-list
-          [tasks]="(tasks$ | async) ?? []"
+          [tasks]="(filteredTasks$ | async) ?? []"
           [household]="household"
           [currentUserUid]="currentUser?.uid ?? ''"
           [isAdmin]="isAdmin(household)"

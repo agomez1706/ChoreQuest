@@ -585,3 +585,150 @@
 .dropdown-list a.text-danger:hover {
   background-color: rgba(239, 68, 68, 0.1);
 }
+
+/* =========================================
+   FILTER & SORT TOOLBAR
+========================================= */
+.filter-toolbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: white;
+  border-radius: 0.75rem; /* Matches your task cards */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* Subtle depth */
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 auto; /* Forces them to share a single row evenly on desktop */
+  min-width: 110px; /* Prevents them from squishing too small */
+}
+
+.filter-group label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  letter-spacing: 0.05em;
+}
+
+.filter-select {
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--gray-300);
+  background-color: var(--gray-50);
+  font-size: 0.85rem;
+  color: var(--gray-700);
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  width: 100%; /* Ensures the select fills the flex column */
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.filter-select:focus,
+.filter-select:hover {
+  border-color: var(--indigo-500);
+  background-color: white;
+}
+
+.divider {
+  width: 1px;
+  height: 2.5rem;
+  background-color: var(--gray-200);
+  margin: 0 0.25rem;
+}
+
+/* Mobile Adjustments for the Toolbar */
+@media (max-width: 768px) {
+  .filter-toolbar {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .filter-group {
+    min-width: calc(50% - 0.5rem); /* Forces exactly 2 per row on mobile */
+  }
+
+  .divider {
+    display: none; /* Hides vertical divider on small screens where they wrap */
+  }
+}
+
+/* =========================================
+   DYNAMIC POINTS INPUTS
+========================================= */
+.points-range-group {
+  min-width: 140px; /* Slightly wider to fit two inputs */
+}
+
+.range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.filter-input {
+  width: 100%;
+  min-width: 0; /* Prevents flexbox from blowing out the width */
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--gray-300);
+  background-color: var(--gray-50);
+  font-size: 0.85rem;
+  color: var(--gray-700);
+  font-weight: 500;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.filter-input:focus,
+.filter-input:hover {
+  border-color: var(--indigo-500);
+  background-color: white;
+}
+
+/* Hide the up/down arrows on number inputs to keep it clean */
+.filter-input::-webkit-outer-spin-button,
+.filter-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.filter-input[type='number'] {
+  appearance: textfield;
+}
+
+.range-separator {
+  color: var(--gray-400);
+  font-weight: bold;
+}
+
+.filter-error {
+  color: #dc2626; /* Red-600 */
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-top: 0.2rem;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
